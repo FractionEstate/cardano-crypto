@@ -137,7 +137,7 @@ impl Ed25519Signature {
 #[derive(Clone, Debug)]
 pub struct Ed25519;
 
-impl DsignAlgorithm for Ed25519 {
+impl super::DsignAlgorithm for Ed25519 {
     type SigningKey = Ed25519SigningKey;
     type VerificationKey = Ed25519VerificationKey;
     type Signature = Ed25519Signature;
@@ -178,6 +178,89 @@ impl DsignAlgorithm for Ed25519 {
     fn gen_key(seed: &[u8]) -> Self::SigningKey {
         assert_eq!(seed.len(), SEED_SIZE, "Ed25519 seed must be exactly 32 bytes");
         Ed25519SigningKey::from_seed_bytes(seed)
+    }
+}
+
+// New trait implementation for compatibility with KES
+use crate::common::traits::DsignAlgorithm as CommonDsignAlgorithm;
+use crate::common::error::{CryptoError as CommonCryptoError, Result};
+
+impl CommonDsignAlgorithm for Ed25519 {
+    type SigningKey = Ed25519SigningKey;
+    type VerificationKey = Ed25519VerificationKey;
+    type Signature = Ed25519Signature;
+    type Context = ();
+
+    const ALGORITHM_NAME: &'static str = "Ed25519";
+    const SEED_SIZE: usize = SEED_SIZE;
+    const SIGNING_KEY_SIZE: usize = SECRET_COMPOUND_SIZE;
+    const VERIFICATION_KEY_SIZE: usize = VERIFICATION_KEY_SIZE;
+    const SIGNATURE_SIZE: usize = SIGNATURE_SIZE;
+
+    fn gen_key_from_seed(seed: &[u8]) -> Result<Self::SigningKey> {
+        if seed.len() != SEED_SIZE {
+            return Err(CommonCryptoError::InvalidSeedLength {
+                expected: SEED_SIZE,
+                actual: seed.len(),
+            });
+        }
+        Ok(Ed25519SigningKey::from_seed_bytes(seed))
+    }
+
+    fn derive_verification_key(signing_key: &Self::SigningKey) -> Result<Self::VerificationKey> {
+        let mut bytes = [0u8; VERIFICATION_KEY_SIZE];
+        bytes.copy_from_slice(&signing_key.verifying_bytes());
+        Ok(Ed25519VerificationKey(bytes))
+    }
+
+    fn sign(message: &[u8], signing_key: &Self::SigningKey) -> Result<Self::Signature> {
+        let signing_key_dalek = signing_key.signing_key();
+        let signature = signing_key_dalek.sign(message);
+        Ok(Ed25519Signature::from_dalek(&signature))
+    }
+
+    fn verify(
+        message: &[u8],
+        signature: &Self::Signature,
+        verification_key: &Self::VerificationKey,
+    ) -> Result<()> {
+        let verifying_key = DalekVerifyingKey::from_bytes(verification_key.as_bytes())
+            .map_err(|_| CommonCryptoError::InvalidPublicKey)?;
+
+        let sig = DalekSignature::try_from(signature.as_bytes().as_ref())
+            .map_err(|_| CommonCryptoError::InvalidSignature)?;
+
+        verifying_key
+            .verify(message, &sig)
+            .map_err(|_| CommonCryptoError::VerificationFailed)
+    }
+
+    fn serialize_verification_key(key: &Self::VerificationKey) -> alloc::vec::Vec<u8> {
+        key.as_bytes().to_vec()
+    }
+
+    fn deserialize_verification_key(bytes: &[u8]) -> Result<Self::VerificationKey> {
+        Ed25519VerificationKey::from_bytes(bytes)
+            .ok_or(CommonCryptoError::InvalidPublicKey)
+    }
+
+    fn serialize_signature(signature: &Self::Signature) -> alloc::vec::Vec<u8> {
+        signature.as_bytes().to_vec()
+    }
+
+    fn deserialize_signature(bytes: &[u8]) -> Result<Self::Signature> {
+        if bytes.len() != SIGNATURE_SIZE {
+            return Err(CommonCryptoError::InvalidSignature);
+        }
+        let mut array = [0u8; SIGNATURE_SIZE];
+        array.copy_from_slice(bytes);
+        Ok(Ed25519Signature(array))
+    }
+
+    fn forget_signing_key(_signing_key: Self::SigningKey) {
+        // In Rust, the drop will handle zeroization if we use zeroize crate
+        // For now, the key will be dropped and memory will be freed
+        // TODO: Add proper zeroization using zeroize crate
     }
 }
 

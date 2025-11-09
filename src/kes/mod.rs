@@ -12,21 +12,64 @@
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
-use crate::common::Result;
+use crate::common::error::{CryptoError, Result};
 
+pub mod hash;
 pub mod single;
 pub mod sum;
-pub mod compact_sum;
 
-pub use single::SingleKes;
-pub use sum::{Sum0Kes, Sum1Kes, Sum2Kes, Sum3Kes, Sum4Kes, Sum5Kes, Sum6Kes, Sum7Kes};
-pub use compact_sum::{
+pub use hash::{Blake2b224, Blake2b256, Blake2b512, KesHashAlgorithm};
+pub use single::{CompactSingleKes, CompactSingleSig, OptimizedKesSignature, SingleKes};
+pub use sum::{
     CompactSum0Kes, CompactSum1Kes, CompactSum2Kes, CompactSum3Kes, CompactSum4Kes,
-    CompactSum5Kes, CompactSum6Kes, CompactSum7Kes,
+    CompactSum5Kes, CompactSum6Kes, CompactSum7Kes, CompactSumKes, Sum0Kes, Sum1Kes, Sum2Kes,
+    Sum3Kes, Sum4Kes, Sum5Kes, Sum6Kes, Sum7Kes, SumKes,
 };
 
 /// KES period type (0 to 2^N - 1)
 pub type Period = u64;
+
+/// KES-specific errors
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum KesError {
+    /// Period out of valid range
+    PeriodOutOfRange { period: Period, max_period: Period },
+    /// Key has expired
+    KeyExpired,
+    /// Verification failed
+    VerificationFailed,
+    /// Invalid seed length
+    InvalidSeedLength { expected: usize, actual: usize },
+    /// Key update failed
+    UpdateFailed,
+}
+
+impl core::fmt::Display for KesError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::PeriodOutOfRange { period, max_period } => {
+                write!(
+                    f,
+                    "Period {} out of range (max: {})",
+                    period, max_period
+                )
+            }
+            Self::KeyExpired => write!(f, "KES key has expired"),
+            Self::VerificationFailed => write!(f, "KES signature verification failed"),
+            Self::InvalidSeedLength { expected, actual } => {
+                write!(
+                    f,
+                    "Invalid seed length: expected {} bytes, got {}",
+                    expected, actual
+                )
+            }
+            Self::UpdateFailed => write!(f, "KES key update failed"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for KesError {}
 
 /// Trait for KES algorithms
 pub trait KesAlgorithm {
@@ -36,7 +79,11 @@ pub trait KesAlgorithm {
     type SigningKey;
     /// Signature type
     type Signature;
+    /// Context type (usually () for most implementations)
+    type Context;
 
+    /// Algorithm name
+    const ALGORITHM_NAME: &'static str;
     /// Seed size in bytes
     const SEED_SIZE: usize;
     /// Verification key size in bytes
@@ -49,29 +96,50 @@ pub trait KesAlgorithm {
     /// Total number of periods this KES scheme supports
     fn total_periods() -> Period;
 
-    /// Generate key from seed
-    fn gen_key_from_seed(seed: &[u8]) -> Result<Self::SigningKey>;
+    /// Generate signing key from seed
+    fn gen_key_kes_from_seed(seed: &[u8]) -> Result<Self::SigningKey>;
 
     /// Derive verification key from signing key
     fn derive_verification_key(signing_key: &Self::SigningKey) -> Result<Self::VerificationKey>;
 
     /// Sign a message at a specific period
-    fn sign(
-        signing_key: &Self::SigningKey,
+    fn sign_kes(
+        context: &Self::Context,
         period: Period,
         message: &[u8],
+        signing_key: &Self::SigningKey,
     ) -> Result<Self::Signature>;
 
     /// Verify a signature at a specific period
-    fn verify(
+    fn verify_kes(
+        context: &Self::Context,
         verification_key: &Self::VerificationKey,
         period: Period,
         message: &[u8],
         signature: &Self::Signature,
     ) -> Result<()>;
 
-    /// Update signing key to next period (evolve the key)
-    fn update_key(signing_key: Self::SigningKey, new_period: Period) -> Result<Self::SigningKey>;
+    /// Update signing key to next period (returns None if key expired)
+    fn update_kes(
+        context: &Self::Context,
+        signing_key: Self::SigningKey,
+        period: Period,
+    ) -> Result<Option<Self::SigningKey>>;
+
+    /// Serialize verification key
+    fn raw_serialize_verification_key_kes(key: &Self::VerificationKey) -> Vec<u8>;
+
+    /// Deserialize verification key
+    fn raw_deserialize_verification_key_kes(bytes: &[u8]) -> Option<Self::VerificationKey>;
+
+    /// Serialize signature
+    fn raw_serialize_signature_kes(signature: &Self::Signature) -> Vec<u8>;
+
+    /// Deserialize signature
+    fn raw_deserialize_signature_kes(bytes: &[u8]) -> Option<Self::Signature>;
+
+    /// Securely forget/zeroize signing key
+    fn forget_signing_key_kes(signing_key: Self::SigningKey);
 }
 
 #[cfg(test)]

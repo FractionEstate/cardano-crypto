@@ -3,6 +3,62 @@
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
+use crate::common::error::Result;
+
+/// Trait for digital signature algorithms
+pub trait DsignAlgorithm {
+    /// Verification key type
+    type VerificationKey;
+    /// Signing key type
+    type SigningKey;
+    /// Signature type
+    type Signature;
+    /// Context type (usually () for stateless algorithms)
+    type Context;
+
+    /// Algorithm name
+    const ALGORITHM_NAME: &'static str;
+    /// Seed size in bytes
+    const SEED_SIZE: usize;
+    /// Verification key size in bytes
+    const VERIFICATION_KEY_SIZE: usize;
+    /// Signing key size in bytes
+    const SIGNING_KEY_SIZE: usize;
+    /// Signature size in bytes
+    const SIGNATURE_SIZE: usize;
+
+    /// Generate key from seed
+    fn gen_key_from_seed(seed: &[u8]) -> Result<Self::SigningKey>;
+
+    /// Derive verification key from signing key
+    fn derive_verification_key(signing_key: &Self::SigningKey) -> Result<Self::VerificationKey>;
+
+    /// Sign a message
+    fn sign(message: &[u8], signing_key: &Self::SigningKey) -> Result<Self::Signature>;
+
+    /// Verify a signature
+    fn verify(
+        message: &[u8],
+        signature: &Self::Signature,
+        verification_key: &Self::VerificationKey,
+    ) -> Result<()>;
+
+    /// Serialize verification key
+    fn serialize_verification_key(key: &Self::VerificationKey) -> Vec<u8>;
+
+    /// Deserialize verification key
+    fn deserialize_verification_key(bytes: &[u8]) -> Result<Self::VerificationKey>;
+
+    /// Serialize signature
+    fn serialize_signature(signature: &Self::Signature) -> Vec<u8>;
+
+    /// Deserialize signature
+    fn deserialize_signature(bytes: &[u8]) -> Result<Self::Signature>;
+
+    /// Securely forget/zeroize signing key
+    fn forget_signing_key(signing_key: Self::SigningKey);
+}
+
 /// Trait for types that can be signed/proven
 pub trait SignableRepresentation {
     /// Get the byte representation of this type for signing
