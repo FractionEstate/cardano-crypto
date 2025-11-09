@@ -8,33 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial project structure
-- Core `KesAlgorithm` trait definition
-- Error types (`KesError`, `KesMError`)
-- Blake2b hash algorithms (224, 256, 512-bit)
-- Metrics module (feature-gated)
-- Comprehensive documentation
-- README with examples
-- Contributing guidelines
+- Initial project structure for unified `cardano-crypto` package
+- Feature flag architecture for selective component compilation
+- Module stubs for VRF, KES, DSIGN, Hash, Seed, and CBOR
+- Comprehensive documentation and README
+- MIT and Apache-2.0 dual licensing
 
 ### TODO
-- Extract SingleKES implementation from cardano-base-rust
-- Extract CompactSingleKES implementation
-- Extract SumKES implementation
-- Extract CompactSumKES implementation
-- Add Ed25519/DSIGN dependency
-- Add test vectors
-- Add benchmarks
-- Publish to crates.io
+- [ ] Extract Blake2b implementation from cardano-base-rust
+- [ ] Extract Ed25519 implementation from cardano-base-rust
+- [ ] Migrate VRF Draft-03 and Draft-13 from FractionEstate/cardano-VRF
+- [ ] Implement KES hierarchy (Single, Sum0-7, CompactSum0-7)
+- [ ] Add test vector suite
+- [ ] Performance benchmarks
+- [ ] Security audit
 
 ## [0.1.0] - TBD
 
 ### Added
-- Initial release (pending extraction completion)
-- Full KES implementation compatible with Cardano
-- `no_std` support
-- Comprehensive test coverage
-- Binary compatibility with Haskell implementation
-
-[Unreleased]: https://github.com/FractionEstate/Cardano-KES/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/FractionEstate/Cardano-KES/releases/tag/v0.1.0
+- First release (planned)

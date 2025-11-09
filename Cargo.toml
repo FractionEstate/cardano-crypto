@@ -1,44 +1,82 @@
 [package]
-name = "cardano-kes"
+name = "cardano-crypto"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.91"
-authors = ["FractionEstate <contact@fractionestate.com>"]
+authors = ["FractionEstate"]
 license = "MIT OR Apache-2.0"
-description = "Pure Rust implementation of Cardano Key Evolving Signatures (KES)"
-repository = "https://github.com/FractionEstate/Cardano-KES"
-documentation = "https://docs.rs/cardano-kes"
-keywords = ["cardano", "kes", "cryptography", "blockchain", "key-evolving"]
+repository = "https://github.com/FractionEstate/Cardano-Crypto"
+documentation = "https://docs.rs/cardano-crypto"
+description = "Pure Rust implementation of Cardano cryptographic primitives (VRF, KES, DSIGN, Hash)"
+keywords = ["cardano", "cryptography", "vrf", "kes", "blockchain"]
 categories = ["cryptography", "no-std"]
 readme = "README.md"
 
+[features]
+default = ["std", "thiserror", "vrf", "kes", "dsign", "hash"]
+
+# Standard library support
+std = ["alloc", "curve25519-dalek/std", "sha2/std", "zeroize/std", "serde?/std"]
+alloc = ["curve25519-dalek/alloc", "zeroize/alloc"]
+
+# Component features - allows users to enable only what they need
+vrf = ["dsign", "hash"]
+kes = ["dsign", "hash"]
+dsign = ["hash"]
+hash = []
+cbor = ["alloc"]
+seed = []
+
+# VRF variants
+vrf-draft03 = ["vrf"]
+vrf-draft13 = ["vrf"]
+
+# KES variants
+kes-single = ["kes"]
+kes-sum = ["kes"]
+kes-compact = ["kes"]
+
+# Optional features
+serde = ["dep:serde"]
+metrics = []
+logging = []
+vrf-debug = ["logging"]
+kes-metrics = ["metrics"]
+
 [dependencies]
-# Core dependencies
-thiserror = "2.0"
-blake2 = "0.10"
+# Core cryptographic dependencies (required for Cardano compatibility)
+curve25519-dalek = { version = "4.1", default-features = false, features = ["alloc"] }
+ed25519-dalek = { version = "2.1", default-features = false, features = ["alloc"] }
+sha2 = { version = "0.10", default-features = false }
+zeroize = { version = "1.8", default-features = false, features = ["alloc"] }
+thiserror = { version = "1.0", optional = true }
+
+# Hash functions
+blake2 = { version = "0.10", default-features = false }
+digest = { version = "0.10", default-features = false }
+ripemd = { version = "0.1", default-features = false }
+sha3 = { version = "0.10", default-features = false }
+subtle = { version = "2.6", default-features = false }
 
 # Serialization (optional)
-serde = { version = "1.0", optional = true, default-features = false, features = ["derive"] }
+serde = { version = "1.0", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]
 hex = "0.4"
 serde_json = "1.0"
 
-[features]
-default = ["std"]
-std = ["thiserror/std", "serde?/std"]
-serde = ["dep:serde"]
-kes-metrics = []  # Lightweight metrics for benchmarking
-
-[[example]]
-name = "basic_usage"
-required-features = []
-
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[profile.release]
-lto = true
-codegen-units = 1
-opt-level = 3
+[[example]]
+name = "vrf_basic"
+required-features = ["vrf"]
+
+[[example]]
+name = "kes_lifecycle"
+required-features = ["kes"]
+
+[[example]]
+name = "dsign_sign_verify"
+required-features = ["dsign"]

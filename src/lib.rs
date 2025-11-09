@@ -1,183 +1,139 @@
-//! # Cardano KES - Key Evolving Signatures
+//! # Cardano Crypto
 //!
-//! Pure Rust implementation of Key Evolving Signature schemes used in the Cardano blockchain.
+//! Pure Rust implementation of Cardano cryptographic primitives.
 //!
-//! ## What is KES?
+//! This crate provides a unified interface for all Cardano cryptographic operations:
+//! - **VRF** (Verifiable Random Functions) - IETF Draft-03 and Draft-13
+//! - **KES** (Key Evolving Signatures) - Forward-secure signature schemes
+//! - **DSIGN** (Digital Signatures) - Ed25519 and variants
+//! - **Hash** - Blake2b, SHA-2, and other Cardano hash functions
+//! - **Seed** - Deterministic key derivation
+//! - **CBOR** - Optional serialization support
 //!
-//! Key Evolving Signatures (KES) provide **forward security** through irreversible key evolution.
-//! Once a signing key evolves to period N, it cannot sign for any period < N, even if compromised.
+//! # Feature Flags
 //!
-//! This is critical for blockchain consensus where validators must:
-//! - Sign blocks across many periods (epochs/slots)
-//! - Protect against future key compromise affecting historical signatures
-//! - Minimize damage from key theft
+//! This crate uses feature flags to allow selective compilation:
 //!
-//! ## Quick Example
+//! - `std` (default) - Standard library support
+//! - `alloc` - Allocation support for no_std
+//! - `vrf` - VRF implementations (includes `dsign`, `hash`)
+//! - `kes` - KES implementations (includes `dsign`, `hash`)
+//! - `dsign` - Digital signature algorithms (includes `hash`)
+//! - `hash` - Hash functions
+//! - `cbor` - CBOR serialization
+//! - `serde` - Serde serialization for keys/signatures
+//! - `metrics` - Performance metrics collection
+//! - `logging` - Debug logging support
 //!
-//! ```rust
-//! use cardano_kes::*;
+//! # Examples
 //!
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! // Generate a Sum2KES key (supports 4 periods: 0, 1, 2, 3)
-//! let seed = vec![0u8; Sum2Kes::SEED_SIZE];
-//! let mut signing_key = Sum2Kes::gen_key_kes_from_seed_bytes(&seed)?;
-//! let verification_key = Sum2Kes::derive_verification_key(&signing_key)?;
+//! ## VRF Proof Generation
 //!
-//! // Sign for period 0
-//! let message = b"Block at period 0";
-//! let signature = Sum2Kes::sign_kes(&(), 0, message, &signing_key)?;
+//! ```rust,ignore
+//! use cardano_crypto::vrf::{VrfDraft03, VrfKeyPair};
 //!
-//! // Verify signature
-//! Sum2Kes::verify_kes(&(), &verification_key, 0, message, &signature)?;
-//!
-//! // Evolve key to period 1
-//! signing_key = Sum2Kes::update_kes(&(), signing_key, 0)?
-//!     .expect("key is still valid");
-//!
-//! // ✓ Can sign for period 1
-//! let sig1 = Sum2Kes::sign_kes(&(), 1, b"Block at period 1", &signing_key)?;
-//!
-//! // ✗ Cannot sign for period 0 anymore (forward security!)
-//! assert!(Sum2Kes::sign_kes(&(), 0, message, &signing_key).is_err());
-//! # Ok(())
-//! # }
+//! let seed = [0u8; 32];
+//! let keypair = VrfKeyPair::from_seed(&seed);
+//! let proof = keypair.prove(b"message")?;
+//! let output = proof.verify(&keypair.public_key(), b"message")?;
 //! ```
 //!
-//! ## KES Algorithm Families
+//! ## KES Signing
 //!
-//! ### SingleKES
+//! ```rust,ignore
+//! use cardano_crypto::kes::{Sum6Kes, KesAlgorithm};
 //!
-//! The simplest KES - a single-period wrapper around Ed25519:
-//!
-//! ```rust
-//! use cardano_kes::*;
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let seed = vec![0u8; SingleKes::SEED_SIZE];
-//! let sk = SingleKes::gen_key_kes_from_seed_bytes(&seed)?;
-//! let vk = SingleKes::derive_verification_key(&sk)?;
-//!
-//! // Only period 0 is valid
-//! let sig = SingleKes::sign_kes(&(), 0, b"message", &sk)?;
-//! SingleKes::verify_kes(&(), &vk, 0, b"message", &sig)?;
-//! # Ok(())
-//! # }
+//! let seed = [0u8; 32];
+//! let signing_key = Sum6Kes::gen_key_from_seed(&seed)?;
+//! let signature = Sum6Kes::sign(&signing_key, 0, b"message")?;
 //! ```
 //!
-//! ### SumKES
+//! ## Digital Signatures
 //!
-//! Binary tree composition supporting 2^n periods:
+//! ```rust,ignore
+//! use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
 //!
-//! ```rust
-//! use cardano_kes::*;
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! // Sum3Kes = 2^3 = 8 periods
-//! let seed = vec![0u8; Sum3Kes::SEED_SIZE];
-//! let mut sk = Sum3Kes::gen_key_kes_from_seed_bytes(&seed)?;
-//! let vk = Sum3Kes::derive_verification_key(&sk)?;
-//!
-//! // Evolve through periods
-//! for period in 0..Sum3Kes::total_periods() {
-//!     let message = format!("Period {}", period);
-//!     let sig = Sum3Kes::sign_kes(&(), period, message.as_bytes(), &sk)?;
-//!     Sum3Kes::verify_kes(&(), &vk, period, message.as_bytes(), &sig)?;
-//!
-//!     if period + 1 < Sum3Kes::total_periods() {
-//!         sk = Sum3Kes::update_kes(&(), sk, period)?.expect("key valid");
-//!     }
-//! }
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! ### CompactSumKES
-//!
-//! Optimized variant with smaller signatures (embeds verification keys):
-//!
-//! ```rust
-//! use cardano_kes::*;
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let seed = vec![0u8; CompactSum3Kes::SEED_SIZE];
-//! let sk = CompactSum3Kes::gen_key_kes_from_seed_bytes(&seed)?;
-//! let vk = CompactSum3Kes::derive_verification_key(&sk)?;
-//!
-//! let sig = CompactSum3Kes::sign_kes(&(), 0, b"message", &sk)?;
-//! CompactSum3Kes::verify_kes(&(), &vk, 0, b"message", &sig)?;
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! ## Features
-//!
-//! - **`std`** (default) - Standard library support
-//! - **`serde`** - Serialization for keys and signatures
-//! - **`kes-metrics`** - Lightweight performance metrics
-//!
-//! ## Binary Compatibility
-//!
-//! This implementation maintains byte-level compatibility with Haskell's `cardano-crypto-class`:
-//!
-//! - Verification keys serialize identically
-//! - Signatures are binary-compatible
-//! - Hash algorithm (Blake2b-256) matches exactly
-//! - All official Cardano test vectors pass
-//!
-//! ## Security
-//!
-//! - ✅ Zero unsafe code
-//! - ✅ Automatic key zeroization on drop
-//! - ✅ Forward security guarantees
-//! - ✅ Constant-time operations where applicable
-//!
-//! ## Module Organization
-//!
-//! ```text
-//! cardano_kes
-//! ├── error           Error types (KesError, KesMError)
-//! ├── traits          Core KesAlgorithm trait
-//! ├── single          SingleKES implementation
-//! ├── compact_single  CompactSingleKES
-//! ├── sum             SumKES family
-//! ├── compact_sum     CompactSumKES family
-//! ├── hash            Blake2b hash algorithms
-//! └── metrics         Optional performance metrics
+//! let seed = [0u8; 32];
+//! let signing_key = Ed25519::gen_key(&seed);
+//! let signature = Ed25519::sign(&signing_key, b"message");
 //! ```
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![deny(missing_docs)]
-#![warn(clippy::all)]
-#![warn(rust_2018_idioms)]
+#![warn(
+    missing_debug_implementations,
+    rust_2018_idioms,
+    unreachable_pub,
+    clippy::all
+)]
 
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
-// Core modules
-pub mod error;
+#[cfg(feature = "std")]
+extern crate std;
+
+// ============================================================================
+// Common utilities and traits
+// ============================================================================
+
+pub mod common;
+
+// ============================================================================
+// Core cryptographic components
+// ============================================================================
+
+#[cfg(feature = "hash")]
+#[cfg_attr(docsrs, doc(cfg(feature = "hash")))]
 pub mod hash;
-pub mod metrics;
-pub mod traits;
 
-// KES implementations
-pub mod compact_single;
-pub mod compact_sum;
-pub mod single;
-pub mod sum;
+#[cfg(feature = "seed")]
+#[cfg_attr(docsrs, doc(cfg(feature = "seed")))]
+pub mod seed;
 
+#[cfg(feature = "dsign")]
+#[cfg_attr(docsrs, doc(cfg(feature = "dsign")))]
+pub mod dsign;
+
+#[cfg(feature = "vrf")]
+#[cfg_attr(docsrs, doc(cfg(feature = "vrf")))]
+pub mod vrf;
+
+#[cfg(feature = "kes")]
+#[cfg_attr(docsrs, doc(cfg(feature = "kes")))]
+pub mod kes;
+
+#[cfg(feature = "cbor")]
+#[cfg_attr(docsrs, doc(cfg(feature = "cbor")))]
+pub mod cbor;
+
+// ============================================================================
 // Re-exports for convenience
-pub use error::{KesError, KesMError};
-pub use hash::{Blake2b224, Blake2b256, Blake2b512, KesHashAlgorithm};
-pub use traits::{KesAlgorithm, Period, UnsoundKesAlgorithm};
+// ============================================================================
 
-// Re-export SingleKes
-pub use single::SingleKes;
+#[cfg(feature = "hash")]
+pub use hash::{Blake2b224, Blake2b256, Blake2b512, HashAlgorithm};
 
-// Re-export CompactSingleKes
-pub use compact_single::{CompactSingleKes, CompactSingleSig, OptimizedKesSignature};
+#[cfg(feature = "dsign")]
+pub use dsign::{DsignAlgorithm, Ed25519};
 
-// Re-export Sum type aliases (using Blake2b256)
-pub use sum::{Sum0Kes, Sum1Kes, Sum2Kes, Sum3Kes, Sum4Kes, Sum5Kes, Sum6Kes, Sum7Kes};
+#[cfg(feature = "vrf")]
+pub use vrf::VrfDraft03;
 
-// Re-export CompactSum type aliases (using Blake2b256)
-pub use compact_sum::{
-    CompactSum0Kes, CompactSum1Kes, CompactSum2Kes, CompactSum3Kes, CompactSum4Kes, CompactSum5Kes,
-    CompactSum6Kes, CompactSum7Kes,
+#[cfg(feature = "kes")]
+pub use kes::{
+    CompactSum0Kes, CompactSum1Kes, CompactSum2Kes, CompactSum3Kes, CompactSum4Kes,
+    CompactSum5Kes, CompactSum6Kes, CompactSum7Kes, KesAlgorithm, SingleKes, Sum0Kes, Sum1Kes,
+    Sum2Kes, Sum3Kes, Sum4Kes, Sum5Kes, Sum6Kes, Sum7Kes,
 };
+
+// ============================================================================
+// Crate metadata
+// ============================================================================
+
+/// Crate version
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// Crate name
+pub const NAME: &str = env!("CARGO_PKG_NAME");
