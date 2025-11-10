@@ -266,6 +266,17 @@ impl Ed25519SigningKey {
     }
 
     /// Get the seed bytes (first 32 bytes)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::ed25519::Ed25519SigningKey;
+    ///
+    /// let seed = [99u8; 32];
+    /// let sk = Ed25519SigningKey::from_seed_bytes(&seed);
+    /// let extracted_seed = sk.seed_bytes();
+    /// assert_eq!(seed, extracted_seed);
+    /// ```
     #[must_use]
     pub fn seed_bytes(&self) -> [u8; SEED_SIZE] {
         let mut seed = [0u8; SEED_SIZE];
@@ -274,6 +285,17 @@ impl Ed25519SigningKey {
     }
 
     /// Get the verification key bytes (last 32 bytes)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::ed25519::Ed25519SigningKey;
+    ///
+    /// let seed = [77u8; 32];
+    /// let sk = Ed25519SigningKey::from_seed_bytes(&seed);
+    /// let vk_bytes = sk.verifying_bytes();
+    /// assert_eq!(vk_bytes.len(), 32);
+    /// ```
     #[must_use]
     pub fn verifying_bytes(&self) -> [u8; VERIFICATION_KEY_SIZE] {
         let mut vk = [0u8; VERIFICATION_KEY_SIZE];
@@ -350,6 +372,19 @@ impl Ed25519Signature {
     }
 
     /// Get the raw bytes
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
+    ///
+    /// let seed = [1u8; 32];
+    /// let sk = Ed25519::gen_key(&seed);
+    /// let message = b"test";
+    /// let sig = Ed25519::sign(&sk, message);
+    /// let bytes = sig.as_bytes();
+    /// assert_eq!(bytes.len(), 64);
+    /// ```
     #[must_use]
     pub fn as_bytes(&self) -> &[u8; SIGNATURE_SIZE] {
         &self.0

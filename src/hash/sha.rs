@@ -50,6 +50,16 @@ pub fn sha256d(data: &[u8]) -> [u8; 32] {
 /// SHA-512 hash (64 bytes output)
 ///
 /// General purpose cryptographic hash with longer output.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::sha512;
+///
+/// let data = b"Large data needing 512-bit hash";
+/// let hash = sha512(data);
+/// assert_eq!(hash.len(), 64);
+/// ```
 #[must_use]
 pub fn sha512(data: &[u8]) -> [u8; 64] {
     let mut hasher = Sha512::new();
@@ -61,6 +71,16 @@ pub fn sha512(data: &[u8]) -> [u8; 64] {
 ///
 /// Keccak-based standardized hash function.
 /// Used in Ethereum 2.0 and various modern protocols.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::sha3_256;
+///
+/// let data = b"Ethereum 2.0 data";
+/// let hash = sha3_256(data);
+/// assert_eq!(hash.len(), 32);
+/// ```
 #[must_use]
 pub fn sha3_256(data: &[u8]) -> [u8; 32] {
     let mut hasher = Sha3_256::new();
@@ -71,6 +91,16 @@ pub fn sha3_256(data: &[u8]) -> [u8; 32] {
 /// SHA3-512 hash (64 bytes output)
 ///
 /// Keccak-based standardized hash function with longer output.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::sha3_512;
+///
+/// let data = b"SHA3-512 data";
+/// let hash = sha3_512(data);
+/// assert_eq!(hash.len(), 64);
+/// ```
 #[must_use]
 pub fn sha3_512(data: &[u8]) -> [u8; 64] {
     let mut hasher = Sha3_512::new();
@@ -82,6 +112,16 @@ pub fn sha3_512(data: &[u8]) -> [u8; 64] {
 ///
 /// Original Keccak algorithm before NIST standardization.
 /// Used in Ethereum 1.0 for transaction hashing and address generation.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::keccak256;
+///
+/// let data = b"Ethereum transaction";
+/// let hash = keccak256(data);
+/// assert_eq!(hash.len(), 32);
+/// ```
 #[must_use]
 pub fn keccak256(data: &[u8]) -> [u8; 32] {
     let mut hasher = Keccak256::new();
@@ -92,6 +132,16 @@ pub fn keccak256(data: &[u8]) -> [u8; 32] {
 /// RIPEMD-160 hash (20 bytes output)
 ///
 /// Used in Bitcoin address generation: `RIPEMD160(SHA256(pubkey))`.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::ripemd160;
+///
+/// let data = b"Bitcoin pubkey hash";
+/// let hash = ripemd160(data);
+/// assert_eq!(hash.len(), 20);
+/// ```
 #[must_use]
 pub fn ripemd160(data: &[u8]) -> [u8; 20] {
     let mut hasher = Ripemd160::new();
@@ -102,6 +152,16 @@ pub fn ripemd160(data: &[u8]) -> [u8; 20] {
 /// Bitcoin-style address hash: `RIPEMD160(SHA256(data))`
 ///
 /// Used in Bitcoin P2PKH address generation.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::hash160;
+///
+/// let pubkey = b"Bitcoin public key";
+/// let hash = hash160(pubkey);
+/// assert_eq!(hash.len(), 20);
+/// ```
 #[must_use]
 pub fn hash160(data: &[u8]) -> [u8; 20] {
     ripemd160(&sha256(data))

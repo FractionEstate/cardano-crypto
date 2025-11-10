@@ -34,6 +34,31 @@ use crate::kes::{KesAlgorithm, Period};
 /// signature and D's VerKey. The signature for A contains B's signature and C's VerKey.
 ///
 /// This reduces storage from depth*2 keys to just depth keys.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{KesAlgorithm, Period};
+/// use cardano_crypto::kes::sum::CompactSumKes;
+/// use cardano_crypto::kes::single::CompactSingleKes;
+/// use cardano_crypto::kes::hash::Blake2b256;
+/// use cardano_crypto::dsign::Ed25519;
+///
+/// type CompactSum2Kes = CompactSumKes<CompactSingleKes<Ed25519>, Blake2b256>;
+///
+/// # fn main() -> cardano_crypto::common::Result<()> {
+/// // Generate key for 2 periods with compact storage
+/// let seed = [11u8; 32];
+/// let sk = CompactSum2Kes::gen_key_kes_from_seed_bytes(&seed)?;
+/// let vk = CompactSum2Kes::derive_verification_key(&sk)?;
+///
+/// // Sign - signature is more compact
+/// let message = b"compact period 0";
+/// let sig = CompactSum2Kes::sign_kes(&(), 0, message, &sk)?;
+/// CompactSum2Kes::verify_kes(&(), &vk, 0, message, &sig)?;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug)]
 pub struct CompactSumKes<D, H>(PhantomData<(D, H)>)
 where
