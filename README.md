@@ -373,53 +373,74 @@ cardano-crypto = { version = "0.1", default-features = false, features = ["alloc
 
 ```
 
-```bash
-
-## Development# Run all tests
-
-cargo test
+## Development
 
 ### Building
 
-# Run with metrics enabled
+```bash
+# Development build (fast compilation, no optimization)
+cargo build --all-features
 
-```bashcargo test --features kes-metrics
+# Production release build (maximum optimization)
+cargo build --release --all-features
 
-# Build all components
+# Build only VRF component
+cargo build --no-default-features --features vrf
 
-cargo build --all-features# Run specific test
+# Build with metrics enabled
+cargo build --features kes-metrics
+```
 
+#### Build Profiles
+
+This crate includes optimized build profiles in `Cargo.toml`:
+
+- **dev** - Fast compilation, no optimization (default for `cargo build`)
+  - `opt-level = 0` - No optimization
+  - `incremental = true` - Fast rebuilds
+  - `codegen-units = 256` - Parallel compilation
+
+- **release** - Maximum optimization (`cargo build --release`)
+  - `opt-level = 3` - Maximum optimization
+  - `lto = "fat"` - Full Link-Time Optimization
+  - `codegen-units = 1` - Best optimization quality
+  - `strip = true` - Smaller binaries
+  - `panic = 'abort'` - Smaller code size
+
+- **release-with-debug** - Release optimizations + debug symbols (for profiling)
+- **bench** - Optimized for benchmarking
+- **test** - Balanced optimization for faster test execution
+
+### Testing
+
+```bash
+# Run all tests
+cargo test --all-features
+
+# Run specific test
 cargo test single_kes_basic
 
-# Build only VRF
+# Run with test vectors
+cargo test --test vrf_golden_tests
+cargo test --test kes_golden_tests
 
-cargo build --no-default-features --features vrf# Run examples
+# Run examples
+cargo run --example vrf_basic
+cargo run --example kes_lifecycle
+cargo run --example dsign_sign_verify
 
-cargo run --example basic_usage
-
-# Run tests```
-
-cargo test --all-features
+# Generate documentation
+cargo doc --all-features --open
+```
 
 ## Binary Compatibility
 
-# Generate documentation
-
-cargo doc --all-features --openThis implementation maintains binary compatibility with Haskell's `cardano-crypto-class`:
-
-```
+This implementation maintains binary compatibility with Haskell's `cardano-crypto-class`:
 
 - ✅ Verification key serialization matches byte-for-byte
-
-### Testing- ✅ Signature format identical to Haskell implementation
-
+- ✅ Signature format identical to Haskell implementation
 - ✅ All official Cardano test vectors pass
-
-```bash- ✅ Hash algorithm (Blake2b-256) matches Haskell exactly
-
-# Run all tests
-
-cargo test --all-features## Security Considerations
+- ✅ Hash algorithm (Blake2b-256) matches Haskell exactly## Security Considerations
 
 
 
