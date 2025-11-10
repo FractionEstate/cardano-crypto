@@ -32,7 +32,7 @@ kes = ["dsign", "hash", "alloc"]
 dsign = ["hash", "alloc"]
 hash = ["alloc"]
 cbor = ["alloc"]
-seed = []
+seed = ["hash", "alloc"]
 
 # VRF variants
 vrf-draft03 = ["vrf"]

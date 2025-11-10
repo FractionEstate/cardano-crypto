@@ -11,6 +11,9 @@
 //! - Use `zeroize` to clear seeds from memory after use
 //! - Never reuse seeds across different applications or protocols
 
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 /// Seed type for cryptographic key generation
 ///
 /// A 32-byte (256-bit) seed value used as the root secret for deterministic
