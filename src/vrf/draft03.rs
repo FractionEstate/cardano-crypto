@@ -105,23 +105,55 @@ pub const PROOF_SIZE: usize = 80;
 /// Ed25519 public key size: 32 bytes
 ///
 /// Compressed Edwards curve point in standard Ed25519 format.
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::vrf::draft03::PUBLIC_KEY_SIZE;
+///
+/// assert_eq!(PUBLIC_KEY_SIZE, 32);
+/// ```
 pub const PUBLIC_KEY_SIZE: usize = 32;
 
 /// Ed25519 secret key size: 64 bytes
 ///
 /// Format: seed (32 bytes) || public_key (32 bytes)
 /// This follows the Ed25519 expanded secret key format used by Cardano.
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::vrf::draft03::SECRET_KEY_SIZE;
+///
+/// assert_eq!(SECRET_KEY_SIZE, 64);
+/// ```
 pub const SECRET_KEY_SIZE: usize = 64;
 
 /// Random seed size for keypair generation: 32 bytes
 ///
 /// High-quality randomness is critical for security. Use a
 /// cryptographically secure random number generator.
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::vrf::draft03::SEED_SIZE;
+///
+/// assert_eq!(SEED_SIZE, 32);
+/// ```
 pub const SEED_SIZE: usize = 32;
 
 /// VRF output hash size: 64 bytes
 ///
 /// SHA-512 hash of the VRF proof's Gamma point.
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::vrf::draft03::OUTPUT_SIZE;
+///
+/// assert_eq!(OUTPUT_SIZE, 64);
+/// ```
 pub const OUTPUT_SIZE: usize = 64;
 
 /// VRF Draft-03 implementation (ECVRF-ED25519-SHA512-Elligator2)

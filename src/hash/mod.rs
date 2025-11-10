@@ -44,9 +44,28 @@ pub trait HashAlgorithm: Clone + Send + Sync + 'static {
     const ALGORITHM_NAME: &'static str;
 
     /// Hash the input data
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::hash::{Blake2b256, HashAlgorithm};
+    ///
+    /// let data = b"input data";
+    /// let hash = Blake2b256::hash(data);
+    /// assert_eq!(hash.len(), Blake2b256::OUTPUT_SIZE);
+    /// ```
     fn hash(data: &[u8]) -> Vec<u8>;
 
     /// Hash two inputs concatenated together
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::hash::{Blake2b256, HashAlgorithm};
+    ///
+    /// let hash = Blake2b256::hash_concat(b"hello", b"world");
+    /// assert_eq!(hash.len(), 32);
+    /// ```
     fn hash_concat(data1: &[u8], data2: &[u8]) -> Vec<u8> {
         let mut combined = Vec::with_capacity(data1.len() + data2.len());
         combined.extend_from_slice(data1);
@@ -55,6 +74,18 @@ pub trait HashAlgorithm: Clone + Send + Sync + 'static {
     }
 
     /// Expand a seed into two new seeds using domain separation
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::hash::{Blake2b256, HashAlgorithm};
+    ///
+    /// let seed = b"original seed";
+    /// let (seed0, seed1) = Blake2b256::expand_seed(seed);
+    /// assert_eq!(seed0.len(), 32);
+    /// assert_eq!(seed1.len(), 32);
+    /// assert_ne!(seed0, seed1);
+    /// ```
     fn expand_seed(seed: &[u8]) -> (Vec<u8>, Vec<u8>) {
         let mut seed0_input = Vec::with_capacity(seed.len() + 1);
         seed0_input.extend_from_slice(seed);
@@ -74,6 +105,18 @@ pub trait HashAlgorithm: Clone + Send + Sync + 'static {
 ///
 /// Returns `false` if the inputs differ in length. When lengths match, the
 /// comparison is performed in constant time to prevent timing attacks.
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::hash::constant_time_eq;
+///
+/// let hash1 = b"same hash value";
+/// let hash2 = b"same hash value";
+/// let hash3 = b"different value";
+/// assert!(constant_time_eq(hash1, hash2));
+/// assert!(!constant_time_eq(hash1, hash3));
+/// ```
 #[must_use]
 pub fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
     use subtle::ConstantTimeEq as _;

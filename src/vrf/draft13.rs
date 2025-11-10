@@ -86,20 +86,60 @@ use crate::vrf::cardano_compat::{cardano_clear_cofactor, cardano_hash_to_curve_d
 /// - c: Challenge scalar (truncated to 16 bytes for compatibility)
 /// - s: Response scalar
 /// - H-string: Hash-to-curve output string (needed for batch verification)
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::vrf::draft13::PROOF_SIZE;
+///
+/// assert_eq!(PROOF_SIZE, 128);
+/// ```
 pub const PROOF_SIZE: usize = 128;
 
 /// Ed25519 public key size: 32 bytes
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::vrf::draft13::PUBLIC_KEY_SIZE;
+///
+/// assert_eq!(PUBLIC_KEY_SIZE, 32);
+/// ```
 pub const PUBLIC_KEY_SIZE: usize = 32;
 
 /// Ed25519 secret key size: 64 bytes
 ///
 /// Format: seed (32 bytes) || public_key (32 bytes)
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::vrf::draft13::SECRET_KEY_SIZE;
+///
+/// assert_eq!(SECRET_KEY_SIZE, 64);
+/// ```
 pub const SECRET_KEY_SIZE: usize = 64;
 
 /// Random seed size for keypair generation: 32 bytes
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::vrf::draft13::SEED_SIZE;
+///
+/// assert_eq!(SEED_SIZE, 32);
+/// ```
 pub const SEED_SIZE: usize = 32;
 
 /// VRF output hash size: 64 bytes (SHA-512)
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::vrf::draft13::OUTPUT_SIZE;
+///
+/// assert_eq!(OUTPUT_SIZE, 64);
+/// ```
 pub const OUTPUT_SIZE: usize = 64;
 
 /// VRF Draft-13 batch-compatible implementation

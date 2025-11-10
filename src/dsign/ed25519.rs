@@ -408,18 +408,57 @@ impl super::DsignAlgorithm for Ed25519 {
     const VERIFICATION_KEY_SIZE: usize = VERIFICATION_KEY_SIZE;
     const SIGNATURE_SIZE: usize = SIGNATURE_SIZE;
 
+    /// Derive verification key from signing key
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
+    ///
+    /// let seed = [3u8; 32];
+    /// let sk = Ed25519::gen_key(&seed);
+    /// let vk = Ed25519::derive_verification_key(&sk);
+    /// assert_eq!(vk.as_bytes().len(), 32);
+    /// ```
     fn derive_verification_key(signing_key: &Self::SigningKey) -> Self::VerificationKey {
         let mut bytes = [0u8; VERIFICATION_KEY_SIZE];
         bytes.copy_from_slice(&signing_key.verifying_bytes());
         Ed25519VerificationKey(bytes)
     }
 
+    /// Sign a message with the signing key
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
+    ///
+    /// let seed = [4u8; 32];
+    /// let sk = Ed25519::gen_key(&seed);
+    /// let message = b"important data";
+    /// let sig = Ed25519::sign(&sk, message);
+    /// assert_eq!(sig.as_bytes().len(), 64);
+    /// ```
     fn sign(signing_key: &Self::SigningKey, message: &[u8]) -> Self::Signature {
         let signing_key = signing_key.signing_key();
         let signature = signing_key.sign(message);
         Ed25519Signature::from_dalek(&signature)
     }
 
+    /// Verify a signature
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
+    ///
+    /// let seed = [5u8; 32];
+    /// let sk = Ed25519::gen_key(&seed);
+    /// let vk = Ed25519::derive_verification_key(&sk);
+    /// let message = b"verify this";
+    /// let sig = Ed25519::sign(&sk, message);
+    /// assert!(Ed25519::verify(&vk, message, &sig).is_ok());
+    /// ```
     fn verify(
         verification_key: &Self::VerificationKey,
         message: &[u8],
@@ -436,6 +475,17 @@ impl super::DsignAlgorithm for Ed25519 {
             .map_err(|_| CryptoError::VerificationFailed)
     }
 
+    /// Generate signing key from seed
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
+    ///
+    /// let seed = [6u8; 32];
+    /// let sk = Ed25519::gen_key(&seed);
+    /// assert_eq!(sk.compound_bytes().len(), 64);
+    /// ```
     fn gen_key(seed: &[u8]) -> Self::SigningKey {
         assert_eq!(
             seed.len(),
@@ -462,6 +512,17 @@ impl CommonDsignAlgorithm for Ed25519 {
     const VERIFICATION_KEY_SIZE: usize = VERIFICATION_KEY_SIZE;
     const SIGNATURE_SIZE: usize = SIGNATURE_SIZE;
 
+    /// Generate key from seed with error handling
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::Ed25519;
+    /// use cardano_crypto::common::traits::DsignAlgorithm;
+    ///
+    /// let seed = [7u8; 32];
+    /// let sk = Ed25519::gen_key_from_seed(&seed).unwrap();
+    /// ```
     fn gen_key_from_seed(seed: &[u8]) -> Result<Self::SigningKey> {
         if seed.len() != SEED_SIZE {
             return Err(CommonCryptoError::InvalidKeyLength);
@@ -469,18 +530,56 @@ impl CommonDsignAlgorithm for Ed25519 {
         Ok(Ed25519SigningKey::from_seed_bytes(seed))
     }
 
+    /// Derive verification key with error handling
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::Ed25519;
+    /// use cardano_crypto::common::traits::DsignAlgorithm;
+    ///
+    /// let seed = [8u8; 32];
+    /// let sk = Ed25519::gen_key_from_seed(&seed).unwrap();
+    /// let vk = Ed25519::derive_verification_key(&sk).unwrap();
+    /// ```
     fn derive_verification_key(signing_key: &Self::SigningKey) -> Result<Self::VerificationKey> {
         let mut bytes = [0u8; VERIFICATION_KEY_SIZE];
         bytes.copy_from_slice(&signing_key.verifying_bytes());
         Ok(Ed25519VerificationKey(bytes))
     }
 
+    /// Sign message (parameter order: message, key)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::Ed25519;
+    /// use cardano_crypto::common::traits::DsignAlgorithm;
+    ///
+    /// let seed = [9u8; 32];
+    /// let sk = Ed25519::gen_key_from_seed(&seed).unwrap();
+    /// let sig = Ed25519::sign(b"data", &sk).unwrap();
+    /// ```
     fn sign(message: &[u8], signing_key: &Self::SigningKey) -> Result<Self::Signature> {
         let signing_key_dalek = signing_key.signing_key();
         let signature = signing_key_dalek.sign(message);
         Ok(Ed25519Signature::from_dalek(&signature))
     }
 
+    /// Verify signature (parameter order: message, sig, key)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::Ed25519;
+    /// use cardano_crypto::common::traits::DsignAlgorithm;
+    ///
+    /// let seed = [10u8; 32];
+    /// let sk = Ed25519::gen_key_from_seed(&seed).unwrap();
+    /// let vk = Ed25519::derive_verification_key(&sk).unwrap();
+    /// let sig = Ed25519::sign(b"msg", &sk).unwrap();
+    /// Ed25519::verify(b"msg", &sig, &vk).unwrap();
+    /// ```
     fn verify(
         message: &[u8],
         signature: &Self::Signature,
@@ -497,20 +596,77 @@ impl CommonDsignAlgorithm for Ed25519 {
             .map_err(|_| CommonCryptoError::VerificationFailed)
     }
 
+    /// Serialize verification key to bytes
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::Ed25519;
+    /// use cardano_crypto::common::traits::DsignAlgorithm;
+    ///
+    /// let seed = [11u8; 32];
+    /// let sk = Ed25519::gen_key_from_seed(&seed).unwrap();
+    /// let vk = Ed25519::derive_verification_key(&sk).unwrap();
+    /// let bytes = Ed25519::serialize_verification_key(&vk);
+    /// assert_eq!(bytes.len(), 32);
+    /// ```
     #[cfg(feature = "alloc")]
     fn serialize_verification_key(key: &Self::VerificationKey) -> alloc::vec::Vec<u8> {
         key.as_bytes().to_vec()
     }
 
+    /// Deserialize verification key from bytes
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::Ed25519;
+    /// use cardano_crypto::common::traits::DsignAlgorithm;
+    ///
+    /// let seed = [12u8; 32];
+    /// let sk = Ed25519::gen_key_from_seed(&seed).unwrap();
+    /// let vk = Ed25519::derive_verification_key(&sk).unwrap();
+    /// let bytes = Ed25519::serialize_verification_key(&vk);
+    /// let recovered = Ed25519::deserialize_verification_key(&bytes).unwrap();
+    /// assert_eq!(vk.as_bytes(), recovered.as_bytes());
+    /// ```
     fn deserialize_verification_key(bytes: &[u8]) -> Result<Self::VerificationKey> {
         Ed25519VerificationKey::from_bytes(bytes).ok_or(CommonCryptoError::InvalidPublicKey)
     }
 
+    /// Serialize signature to bytes
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::Ed25519;
+    /// use cardano_crypto::common::traits::DsignAlgorithm;
+    ///
+    /// let seed = [13u8; 32];
+    /// let sk = Ed25519::gen_key_from_seed(&seed).unwrap();
+    /// let sig = Ed25519::sign(b"test", &sk).unwrap();
+    /// let bytes = Ed25519::serialize_signature(&sig);
+    /// assert_eq!(bytes.len(), 64);
+    /// ```
     #[cfg(feature = "alloc")]
     fn serialize_signature(signature: &Self::Signature) -> alloc::vec::Vec<u8> {
         signature.as_bytes().to_vec()
     }
 
+    /// Deserialize signature from bytes
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::Ed25519;
+    /// use cardano_crypto::common::traits::DsignAlgorithm;
+    ///
+    /// let seed = [14u8; 32];
+    /// let sk = Ed25519::gen_key_from_seed(&seed).unwrap();
+    /// let sig = Ed25519::sign(b"test", &sk).unwrap();
+    /// let bytes = Ed25519::serialize_signature(&sig);
+    /// let recovered = Ed25519::deserialize_signature(&bytes).unwrap();
+    /// ```
     fn deserialize_signature(bytes: &[u8]) -> Result<Self::Signature> {
         if bytes.len() != SIGNATURE_SIZE {
             return Err(CommonCryptoError::InvalidSignature);

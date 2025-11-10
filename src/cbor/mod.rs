@@ -86,6 +86,16 @@ impl std::error::Error for CborError {}
 /// - For length < 256: header + 1 byte length
 /// - For length < 65536: header + 2 bytes length
 /// - For length < 2^32: header + 4 bytes length
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::cbor::encode_bytes;
+///
+/// let data = b"short data";
+/// let cbor = encode_bytes(data);
+/// assert!(cbor.len() > data.len()); // Has CBOR header
+/// ```
 #[cfg(feature = "alloc")]
 pub fn encode_bytes(bytes: &[u8]) -> Vec<u8> {
     let len = bytes.len();
@@ -116,6 +126,17 @@ pub fn encode_bytes(bytes: &[u8]) -> Vec<u8> {
 /// Decode CBOR byte string (major type 2)
 ///
 /// This matches the behavior of `decodeBytes` from Haskell's Cardano.Binary module.
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::cbor::{encode_bytes, decode_bytes};
+///
+/// let original = b"test data";
+/// let cbor = encode_bytes(original);
+/// let decoded = decode_bytes(&cbor).unwrap();
+/// assert_eq!(original, &decoded[..]);
+/// ```
 #[cfg(feature = "alloc")]
 pub fn decode_bytes(cbor: &[u8]) -> Result<Vec<u8>, CborError> {
     if cbor.is_empty() {
@@ -171,6 +192,16 @@ pub fn decode_bytes(cbor: &[u8]) -> Result<Vec<u8>, CborError> {
 /// Encode verification key to CBOR format
 ///
 /// Wraps the raw serialized verification key in CBOR byte string encoding.
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::cbor::encode_verification_key;
+///
+/// let vkey_bytes = b"32-byte-verification-key-data!!!";
+/// let cbor = encode_verification_key(vkey_bytes);
+/// assert!(cbor.len() >= 32);
+/// ```
 #[cfg(feature = "alloc")]
 #[inline]
 pub fn encode_verification_key(raw_bytes: &[u8]) -> Vec<u8> {
@@ -180,6 +211,17 @@ pub fn encode_verification_key(raw_bytes: &[u8]) -> Vec<u8> {
 /// Decode verification key from CBOR format
 ///
 /// Extracts raw bytes from CBOR byte string encoding.
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::cbor::{encode_verification_key, decode_verification_key};
+///
+/// let vkey_bytes = b"verification-key-data-32-bytes!!";
+/// let cbor = encode_verification_key(vkey_bytes);
+/// let decoded = decode_verification_key(&cbor).unwrap();
+/// assert_eq!(vkey_bytes, &decoded[..]);
+/// ```
 #[cfg(feature = "alloc")]
 #[inline]
 pub fn decode_verification_key(cbor: &[u8]) -> Result<Vec<u8>, CborError> {
@@ -189,6 +231,16 @@ pub fn decode_verification_key(cbor: &[u8]) -> Result<Vec<u8>, CborError> {
 /// Encode signature to CBOR format
 ///
 /// Wraps the raw serialized signature in CBOR byte string encoding.
+///
+/// # Example
+///
+/// ```
+/// use cardano_crypto::cbor::encode_signature;
+///
+/// let sig_bytes = b"64-byte-signature-data-needs-to-be-exactly-64-bytes-long!!!";
+/// let cbor = encode_signature(sig_bytes);
+/// assert!(cbor.len() >= 64);
+/// ```
 #[cfg(feature = "alloc")]
 #[inline]
 pub fn encode_signature(raw_bytes: &[u8]) -> Vec<u8> {
