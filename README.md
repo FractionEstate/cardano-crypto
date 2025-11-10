@@ -1,7 +1,7 @@
 # Cardano Crypto - Pure Rust Implementation
 
 [![Crates.io](https://img.shields.io/crates/v/cardano-crypto.svg)](https://crates.io/crates/cardano-crypto)
-[![Documentation](https://docs.rs/cardano-crypto/badge.svg)](https://docs.rs/cardano-crypto)
+[![Documentation](https://docs.rs/cardano-crypto/badge.svg)]([https://docs.rs/cardano-crypto](https://fractionestate.github.io/cardano-crypto/))
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
 [![Rust](https://img.shields.io/badge/rust-1.91%2B-orange.svg)](https://www.rust-lang.org)
 [![CI](https://github.com/FractionEstate/cardano-crypto/workflows/CI/badge.svg)](https://github.com/FractionEstate/cardano-crypto/actions)
