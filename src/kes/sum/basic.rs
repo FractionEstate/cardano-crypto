@@ -58,6 +58,20 @@ where
 /// - `sk`: Current signing key (either left or right subtree)
 /// - `r1_seed`: Seed for generating the right subtree key (when in left subtree)
 /// - `vk0`, `vk1`: Verification keys for both subtrees
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{Sum2Kes, KesAlgorithm};
+///
+/// // Generate a SumKES signing key
+/// let seed = [3u8; 32];
+/// let signing_key = Sum2Kes::gen_key_kes_from_seed_bytes(&seed).unwrap();
+///
+/// // The signing key contains internal state for the binary tree
+/// // Sum2Kes supports 2^2 = 4 periods
+/// assert_eq!(Sum2Kes::total_periods(), 4);
+/// ```
 #[derive(Debug)]
 pub struct SumSigningKey<D, H>
 where
@@ -76,6 +90,24 @@ where
 }
 
 /// Signature for SumKES includes child signature and both verification keys
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{Sum2Kes, KesAlgorithm};
+///
+/// let seed = [4u8; 32];
+/// let signing_key = Sum2Kes::gen_key_kes_from_seed_bytes(&seed).unwrap();
+/// let verification_key = Sum2Kes::derive_verification_key(&signing_key).unwrap();
+///
+/// // Sign message at period 0
+/// let message = b"test message";
+/// let signature = Sum2Kes::sign_kes(&(), 0, message, &signing_key).unwrap();
+///
+/// // Signature contains child sig + both verification keys
+/// // This allows verification without storing all intermediate keys
+/// Sum2Kes::verify_kes(&(), &verification_key, 0, message, &signature).unwrap();
+/// ```
 #[derive(Clone, PartialEq, Eq)]
 pub struct SumSignature<D, H>
 where
@@ -339,27 +371,77 @@ use crate::kes::hash::Blake2b256;
 use crate::kes::single::SingleKes;
 
 /// Base case: SingleKES wrapping Ed25519
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{Sum0Kes, KesAlgorithm};
+///
+/// // Sum0Kes is just SingleKes (1 period)
+/// assert_eq!(Sum0Kes::total_periods(), 1);
+/// ```
 pub type Sum0Kes = SingleKes<Ed25519>;
 
 /// 2^1 = 2 periods
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{Sum1Kes, KesAlgorithm};
+///
+/// assert_eq!(Sum1Kes::total_periods(), 2);
+/// ```
 pub type Sum1Kes = SumKes<Sum0Kes, Blake2b256>;
 
 /// 2^2 = 4 periods
 pub type Sum2Kes = SumKes<Sum1Kes, Blake2b256>;
 
 /// 2^3 = 8 periods
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{Sum3Kes, KesAlgorithm};
+///
+/// assert_eq!(Sum3Kes::total_periods(), 8);
+/// ```
 pub type Sum3Kes = SumKes<Sum2Kes, Blake2b256>;
 
 /// 2^4 = 16 periods
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{Sum4Kes, KesAlgorithm};
+///
+/// assert_eq!(Sum4Kes::total_periods(), 16);
+/// ```
 pub type Sum4Kes = SumKes<Sum3Kes, Blake2b256>;
 
 /// 2^5 = 32 periods
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{Sum5Kes, KesAlgorithm};
+///
+/// assert_eq!(Sum5Kes::total_periods(), 32);
+/// ```
 pub type Sum5Kes = SumKes<Sum4Kes, Blake2b256>;
 
 /// 2^6 = 64 periods
 pub type Sum6Kes = SumKes<Sum5Kes, Blake2b256>;
 
 /// 2^7 = 128 periods (standard Cardano KES)
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{Sum7Kes, KesAlgorithm};
+///
+/// // Cardano uses Sum7Kes with 128 periods
+/// assert_eq!(Sum7Kes::total_periods(), 128);
+/// ```
 pub type Sum7Kes = SumKes<Sum6Kes, Blake2b256>;
 
 #[cfg(test)]

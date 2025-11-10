@@ -55,4 +55,15 @@ pub use traits::{ConstantTimeEq, SignableRepresentation};
 pub use vrf_constants::{ONE, SUITE_DRAFT03, SUITE_DRAFT13, THREE, TWO};
 
 /// Deprecated alias for backwards compatibility
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::common::Result;
+///
+/// fn crypto_operation() -> Result<()> {
+///     Ok(())
+/// }
+/// # crypto_operation().unwrap();
+/// ```
 pub type Result<T> = core::result::Result<T, CryptoError>;

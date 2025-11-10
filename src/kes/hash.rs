@@ -30,6 +30,8 @@ pub trait KesHashAlgorithm: Clone + Send + Sync + 'static {
     ///
     /// ```rust
     /// use cardano_crypto::kes::hash::Blake2b256;
+    /// // Import the trait so associated items and methods are in scope for the doctest
+    /// use cardano_crypto::kes::KesHashAlgorithm;
     /// let data = b"kes test";
     /// let h = Blake2b256::hash(data);
     /// assert_eq!(h.len(), Blake2b256::OUTPUT_SIZE);

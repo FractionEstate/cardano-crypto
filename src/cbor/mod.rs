@@ -32,6 +32,16 @@
 use alloc::vec::Vec;
 
 /// CBOR serialization errors
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::cbor::CborError;
+///
+/// let err = CborError::BufferTooSmall;
+/// let s = format!("{}", err);
+/// assert!(s.len() > 0);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
 pub enum CborError {
@@ -237,9 +247,11 @@ pub fn decode_verification_key(cbor: &[u8]) -> Result<Vec<u8>, CborError> {
 /// ```
 /// use cardano_crypto::cbor::encode_signature;
 ///
-/// let sig_bytes = b"64-byte-signature-data-needs-to-be-exactly-64-bytes-long!!!";
-/// let cbor = encode_signature(sig_bytes);
-/// assert!(cbor.len() >= 64);
+/// // Use a 64-byte signature (common for Ed25519)
+/// let sig_bytes = vec![0u8; 64];
+/// let cbor = encode_signature(&sig_bytes);
+/// // CBOR wrapper adds at least a small header, so encoded length should be >= raw length
+/// assert!(cbor.len() >= sig_bytes.len());
 /// ```
 #[cfg(feature = "alloc")]
 #[inline]

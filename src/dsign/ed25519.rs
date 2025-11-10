@@ -310,6 +310,17 @@ impl Ed25519SigningKey {
     }
 
     /// Get the compound bytes (all 64 bytes)
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cardano_crypto::dsign::ed25519::Ed25519SigningKey;
+    ///
+    /// let seed = [42u8; 32];
+    /// let sk = Ed25519SigningKey::from_seed_bytes(&seed);
+    /// let compound = sk.compound_bytes();
+    /// assert_eq!(compound.len(), 64);
+    /// ```
     #[must_use]
     pub fn compound_bytes(&self) -> &[u8; SECRET_COMPOUND_SIZE] {
         &self.0
@@ -367,6 +378,20 @@ impl core::fmt::Debug for Ed25519Signature {
 
 impl Ed25519Signature {
     /// Create from dalek signature
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cardano_crypto::dsign::ed25519::Ed25519Signature;
+    /// # use ed25519_dalek::Signature as DalekSignature;
+    ///
+    /// # let bytes = [0u8; 64];
+    /// # let dalek_sig = DalekSignature::from_bytes(&bytes);
+    /// // Convert from ed25519-dalek signature
+    /// let sig = Ed25519Signature::from_dalek(&dalek_sig);
+    /// assert_eq!(sig.as_bytes().len(), 64);
+    /// ```
+    #[must_use]
     pub fn from_dalek(signature: &DalekSignature) -> Self {
         Self(signature.to_bytes())
     }

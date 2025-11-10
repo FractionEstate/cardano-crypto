@@ -2,6 +2,22 @@
 //!
 //! This module implements VRF proof generation matching Cardano's libsodium
 //! implementation byte-for-byte.
+//!
+//! # Example
+//!
+//! ```rust
+//! use cardano_crypto::vrf::cardano_compat::cardano_vrf_prove;
+//!
+//! // Proof generation requires a valid 64-byte Ed25519 extended secret key
+//! // This is typically derived from a seed using proper Ed25519 key generation
+//! let secret_key = [1u8; 64]; // Simplified for example
+//! let message = b"block data";
+//!
+//! // Generate VRF proof - returns 80 bytes
+//! let result = cardano_vrf_prove(&secret_key, message);
+//! // Note: Result type demonstrates API; actual generation requires valid keys
+//! # let _ = result; // Suppress unused warning
+//! ```
 
 use curve25519_dalek::{constants::ED25519_BASEPOINT_POINT, scalar::Scalar};
 use sha2::{Digest, Sha512};
@@ -25,6 +41,21 @@ use crate::common::{point_to_bytes, CryptoResult, SUITE_DRAFT03, TWO};
 /// - 32 bytes: Gamma (VRF output point)
 /// - 16 bytes: Challenge c
 /// - 32 bytes: Scalar s
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::vrf::cardano_compat::cardano_vrf_prove;
+///
+/// // VRF proof generation (requires valid Ed25519 extended secret key)
+/// let secret_key = [42u8; 64]; // In practice, derive from proper keygen
+/// let message = b"Cardano slot leader selection";
+///
+/// // Generate proof - returns Result with 80-byte proof
+/// let result = cardano_vrf_prove(&secret_key, message);
+/// // Actual cryptographic operations require valid keys
+/// # let _ = result;
+/// ```
 pub fn cardano_vrf_prove(secret_key: &[u8; 64], message: &[u8]) -> CryptoResult<[u8; 80]> {
     // Step 1: Expand secret key
     let mut az = Zeroizing::new([0u8; 64]);

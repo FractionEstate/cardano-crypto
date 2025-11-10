@@ -2,6 +2,23 @@
 //!
 //! This module implements VRF proof verification matching Cardano's libsodium
 //! implementation byte-for-byte.
+//!
+//! # Example
+//!
+//! ```rust
+//! use cardano_crypto::vrf::cardano_compat::{cardano_vrf_prove, cardano_vrf_verify};
+//!
+//! // Verification requires a valid Ed25519 public key and matching proof
+//! // This example shows the API structure
+//! let public_key = [2u8; 32];
+//! let proof = [0u8; 80]; // VRF proofs are always 80 bytes
+//! let message = b"verified data";
+//!
+//! // Verify proof - returns 64-byte VRF output on success
+//! let result = cardano_vrf_verify(&public_key, &proof, message);
+//! // Note: This demonstrates the API; actual verification requires valid cryptographic data
+//! # let _ = result; // Suppress unused warning
+//! ```
 
 use curve25519_dalek::{
     constants::ED25519_BASEPOINT_POINT, edwards::CompressedEdwardsY, scalar::Scalar,
@@ -39,6 +56,22 @@ use crate::common::{point_to_bytes, CryptoError, CryptoResult, SUITE_DRAFT03, TH
 /// # Errors
 ///
 /// Returns error if proof is invalid, point decompression fails, or hash-to-curve fails
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::vrf::cardano_compat::cardano_vrf_verify;
+///
+/// // VRF verification (requires valid Ed25519 public key and proof)
+/// let public_key = [2u8; 32]; // In practice, derive from keypair
+/// let proof = [0u8; 80]; // VRF proofs are always 80 bytes
+/// let message = b"verify test";
+///
+/// // Verify and extract 64-byte VRF output
+/// let result = cardano_vrf_verify(&public_key, &proof, message);
+/// // Actual verification requires cryptographically valid proof
+/// # let _ = result;
+/// ```
 pub fn cardano_vrf_verify(
     public_key: &[u8; 32],
     proof: &[u8; 80],

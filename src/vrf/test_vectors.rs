@@ -2,6 +2,26 @@
 //!
 //! These test vectors validate compatibility with Cardano's VRF implementation.
 //! Based on IETF draft specifications and cardano-base test suite.
+//!
+//! # Example
+//!
+//! ```rust
+//! use cardano_crypto::vrf::{VrfDraft13, DRAFT13_PROOF_SIZE, OUTPUT_SIZE};
+//!
+//! // Test VRF proof generation and verification
+//! let seed = [42u8; 32];
+//! let (secret_key, public_key) = VrfDraft13::keypair_from_seed(&seed);
+//!
+//! let message = b"Cardano block";
+//! let proof = VrfDraft13::prove(&secret_key, message).unwrap();
+//!
+//! // Proof size is fixed
+//! assert_eq!(proof.len(), DRAFT13_PROOF_SIZE);
+//!
+//! // Verify and extract output
+//! let output = VrfDraft13::verify(&public_key, &proof, message).unwrap();
+//! assert_eq!(output.len(), OUTPUT_SIZE);
+//! ```
 
 #[cfg(test)]
 mod tests {

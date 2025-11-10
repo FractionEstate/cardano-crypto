@@ -67,6 +67,20 @@ where
     H: KesHashAlgorithm;
 
 /// Signing key for CompactSumKES.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{CompactSum2Kes, KesAlgorithm};
+///
+/// // Generate compact signing key
+/// let seed = [6u8; 32];
+/// let signing_key = CompactSum2Kes::gen_key_kes_from_seed_bytes(&seed).unwrap();
+///
+/// // CompactSum uses less storage than regular Sum
+/// // CompactSum2Kes supports 2^2 = 4 periods
+/// assert_eq!(CompactSum2Kes::total_periods(), 4);
+/// ```
 #[derive(Debug)]
 pub struct CompactSumSigningKey<D, H>
 where
@@ -354,27 +368,69 @@ use crate::dsign::ed25519::Ed25519;
 use crate::kes::hash::Blake2b256;
 
 /// Base case: CompactSingleKES wrapping Ed25519
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{CompactSum0Kes, KesAlgorithm};
+///
+/// // CompactSum0Kes is just CompactSingleKes (1 period)
+/// assert_eq!(CompactSum0Kes::total_periods(), 1);
+/// ```
 pub type CompactSum0Kes = CompactSingleKes<Ed25519>;
 
 /// 2^1 = 2 periods (compact)
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{CompactSum1Kes, KesAlgorithm};
+///
+/// assert_eq!(CompactSum1Kes::total_periods(), 2);
+/// ```
 pub type CompactSum1Kes = CompactSumKes<CompactSum0Kes, Blake2b256>;
 
 /// 2^2 = 4 periods (compact)
 pub type CompactSum2Kes = CompactSumKes<CompactSum1Kes, Blake2b256>;
 
 /// 2^3 = 8 periods (compact)
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{CompactSum3Kes, KesAlgorithm};
+///
+/// assert_eq!(CompactSum3Kes::total_periods(), 8);
+/// ```
 pub type CompactSum3Kes = CompactSumKes<CompactSum2Kes, Blake2b256>;
 
 /// 2^4 = 16 periods (compact)
 pub type CompactSum4Kes = CompactSumKes<CompactSum3Kes, Blake2b256>;
 
 /// 2^5 = 32 periods (compact)
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{CompactSum5Kes, KesAlgorithm};
+///
+/// assert_eq!(CompactSum5Kes::total_periods(), 32);
+/// ```
 pub type CompactSum5Kes = CompactSumKes<CompactSum4Kes, Blake2b256>;
 
 /// 2^6 = 64 periods (compact)
 pub type CompactSum6Kes = CompactSumKes<CompactSum5Kes, Blake2b256>;
 
 /// 2^7 = 128 periods (compact, standard Cardano KES)
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{CompactSum7Kes, KesAlgorithm};
+///
+/// // Cardano's compact KES: 128 periods
+/// assert_eq!(CompactSum7Kes::total_periods(), 128);
+/// ```
 pub type CompactSum7Kes = CompactSumKes<CompactSum6Kes, Blake2b256>;
 
 impl<D, H> CompactKesComponents for CompactSumKes<D, H>

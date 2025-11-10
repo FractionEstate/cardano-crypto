@@ -8,7 +8,8 @@
 //!
 //! ```rust
 //! use cardano_crypto::kes::{Sum2Kes, Sum6Kes};
-//!
+//! // Import the trait so `total_periods` is available for the doctest
+//! use cardano_crypto::kes::KesAlgorithm;
 //! // Check periods
 //! assert_eq!(Sum2Kes::total_periods(), 4);
 //! assert_eq!(Sum6Kes::total_periods(), 64);

@@ -35,6 +35,15 @@ use alloc::vec::Vec;
 ///
 /// A 32-byte (256-bit) seed value used as the root secret for deterministic
 /// key generation. This provides sufficient entropy for cryptographic security.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::seed::Seed;
+///
+/// let seed: Seed = [42u8; 32];
+/// assert_eq!(seed.len(), 32);
+/// ```
 pub type Seed = [u8; 32];
 
 /// Generate a deterministic seed from input data using Blake2b-256

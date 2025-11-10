@@ -8,6 +8,8 @@
 //!
 //! ```rust
 //! use cardano_crypto::kes::{SingleKes, CompactSingleKes};
+//! // Import the trait so associated constants are available in this doctest
+//! use cardano_crypto::kes::KesAlgorithm;
 //! // Types are available for use; just assert their associated constants compile
 //! assert_eq!(SingleKes::<cardano_crypto::dsign::Ed25519>::SEED_SIZE, 32);
 //! assert_eq!(CompactSingleKes::<cardano_crypto::dsign::Ed25519>::SEED_SIZE, 32);

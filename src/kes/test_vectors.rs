@@ -2,6 +2,25 @@
 //!
 //! These test vectors validate compatibility with Cardano's KES implementation.
 //! Vectors are derived from the cardano-base test suite and IETF specifications.
+//!
+//! # Example
+//!
+//! ```rust
+//! use cardano_crypto::kes::{Sum6Kes, KesAlgorithm};
+//!
+//! // Test basic KES properties
+//! let seed = [0u8; 32];
+//! let signing_key = Sum6Kes::gen_key_kes_from_seed_bytes(&seed).unwrap();
+//! let verification_key = Sum6Kes::derive_verification_key(&signing_key).unwrap();
+//!
+//! // Sum6Kes supports 64 periods (2^6)
+//! assert_eq!(Sum6Kes::total_periods(), 64);
+//!
+//! // Sign at period 0
+//! let message = b"test";
+//! let signature = Sum6Kes::sign_kes(&(), 0, message, &signing_key).unwrap();
+//! Sum6Kes::verify_kes(&(), &verification_key, 0, message, &signature).unwrap();
+//! ```
 
 #[cfg(test)]
 mod tests {

@@ -54,9 +54,28 @@ pub use sum::{
 };
 
 /// KES period type (0 to 2^N - 1)
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::Period;
+///
+/// let period: Period = 42;
+/// assert_eq!(period, 42u64);
+/// ```
 pub type Period = u64;
 
 /// KES-specific errors
+///
+/// # Examples
+///
+/// ```rust
+/// use cardano_crypto::kes::KesError;
+///
+/// let err = KesError::PeriodOutOfRange { period: 100, max_period: 63 };
+/// let s = format!("{}", err);
+/// assert!(s.contains("100"));
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum KesError {
     /// Period out of valid range

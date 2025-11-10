@@ -15,6 +15,17 @@
 //!
 //! Domain separation is critical for security. Without it, outputs from different
 //! parts of the protocol could be confused, potentially leading to attacks.
+//!
+//! # Example
+//!
+//! ```rust
+//! use cardano_crypto::common::vrf_constants::{SUITE_DRAFT03, SUITE_DRAFT13, ONE, TWO, THREE};
+//! assert_eq!(SUITE_DRAFT03, 0x04);
+//! assert_eq!(SUITE_DRAFT13, 0x03);
+//! assert_eq!(ONE, 0x01);
+//! assert_eq!(TWO, 0x02);
+//! assert_eq!(THREE, 0x03);
+//! ```
 
 /// Suite identifier for IETF VRF Draft-03
 ///
@@ -82,13 +93,3 @@ pub const TWO: u8 = 0x02;
 /// Appears in: `SHA-512(suite || THREE || proof_to_hash(...))`
 pub const THREE: u8 = 0x03;
 
-//! Small compile-time checked examples for constants
-//!
-//! ```rust
-//! use cardano_crypto::common::vrf_constants::{SUITE_DRAFT03, SUITE_DRAFT13, ONE, TWO, THREE};
-//! assert_eq!(SUITE_DRAFT03, 0x04);
-//! assert_eq!(SUITE_DRAFT13, 0x03);
-//! assert_eq!(ONE, 0x01);
-//! assert_eq!(TWO, 0x02);
-//! assert_eq!(THREE, 0x03);
-//! ```
