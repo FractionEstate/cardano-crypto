@@ -137,12 +137,14 @@ pub trait KesAlgorithm {
     ) -> Result<Option<Self::SigningKey>>;
 
     /// Serialize verification key
+    #[cfg(feature = "alloc")]
     fn raw_serialize_verification_key_kes(key: &Self::VerificationKey) -> Vec<u8>;
 
     /// Deserialize verification key
     fn raw_deserialize_verification_key_kes(bytes: &[u8]) -> Option<Self::VerificationKey>;
 
     /// Serialize signature
+    #[cfg(feature = "alloc")]
     fn raw_serialize_signature_kes(signature: &Self::Signature) -> Vec<u8>;
 
     /// Deserialize signature

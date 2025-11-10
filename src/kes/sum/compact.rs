@@ -3,7 +3,10 @@
 //! This module implements CompactSumKES, an optimized version of SumKES that stores
 //! fewer verification keys by embedding them in signatures.
 
-use std::marker::PhantomData;
+use core::marker::PhantomData;
+
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
 
 use crate::common::error::{CryptoError, Result};
 use crate::kes::hash::KesHashAlgorithm;
@@ -277,6 +280,7 @@ where
         })
     }
 
+    #[cfg(feature = "alloc")]
     fn raw_serialize_verification_key_kes(key: &Self::VerificationKey) -> Vec<u8> {
         key.clone()
     }
@@ -289,6 +293,7 @@ where
         }
     }
 
+    #[cfg(feature = "alloc")]
     fn raw_serialize_signature_kes(signature: &Self::Signature) -> Vec<u8> {
         let mut result = D::raw_serialize_signature_kes(&signature.sigma);
         result.extend_from_slice(&D::raw_serialize_verification_key_kes(&signature.vk_other));

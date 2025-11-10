@@ -448,6 +448,7 @@ impl CommonDsignAlgorithm for Ed25519 {
             .map_err(|_| CommonCryptoError::VerificationFailed)
     }
 
+    #[cfg(feature = "alloc")]
     fn serialize_verification_key(key: &Self::VerificationKey) -> alloc::vec::Vec<u8> {
         key.as_bytes().to_vec()
     }
@@ -456,6 +457,7 @@ impl CommonDsignAlgorithm for Ed25519 {
         Ed25519VerificationKey::from_bytes(bytes).ok_or(CommonCryptoError::InvalidPublicKey)
     }
 
+    #[cfg(feature = "alloc")]
     fn serialize_signature(signature: &Self::Signature) -> alloc::vec::Vec<u8> {
         signature.as_bytes().to_vec()
     }

@@ -5,6 +5,8 @@
 //! - Blake2b-256 (32 bytes) - KES verification keys (matches Haskell)
 //! - Blake2b-512 (64 bytes) - General purpose
 
+use alloc::vec::Vec;
+
 use super::HashAlgorithm;
 use blake2::digest::consts::{U28, U32};
 use blake2::{Blake2b, Digest};

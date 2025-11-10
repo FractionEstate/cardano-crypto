@@ -165,6 +165,7 @@ where
         D::gen_key_from_seed(seed)
     }
 
+    #[cfg(feature = "alloc")]
     fn raw_serialize_verification_key_kes(key: &Self::VerificationKey) -> Vec<u8> {
         D::serialize_verification_key(key)
     }
@@ -173,6 +174,7 @@ where
         D::deserialize_verification_key(bytes).ok()
     }
 
+    #[cfg(feature = "alloc")]
     fn raw_serialize_signature_kes(signature: &Self::Signature) -> Vec<u8> {
         let mut result = D::serialize_signature(&signature.signature);
         result.extend_from_slice(&D::serialize_verification_key(&signature.verification_key));

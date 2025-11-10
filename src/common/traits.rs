@@ -148,6 +148,7 @@ pub trait DsignAlgorithm {
     /// # Returns
     ///
     /// Byte vector containing the serialized key
+    #[cfg(feature = "alloc")]
     fn serialize_verification_key(key: &Self::VerificationKey) -> Vec<u8>;
 
     /// Deserialize a verification key from bytes
@@ -174,6 +175,7 @@ pub trait DsignAlgorithm {
     /// # Returns
     ///
     /// Byte vector containing the serialized signature
+    #[cfg(feature = "alloc")]
     fn serialize_signature(signature: &Self::Signature) -> Vec<u8>;
 
     /// Deserialize a signature from bytes

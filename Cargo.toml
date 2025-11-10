@@ -27,10 +27,10 @@ std = ["alloc", "sha2/std", "zeroize/std", "serde?/std"]
 alloc = ["curve25519-dalek/alloc", "zeroize/alloc"]
 
 # Component features - allows users to enable only what they need
-vrf = ["dsign", "hash"]
-kes = ["dsign", "hash"]
-dsign = ["hash"]
-hash = []
+vrf = ["dsign", "hash", "alloc"]
+kes = ["dsign", "hash", "alloc"]
+dsign = ["hash", "alloc"]
+hash = ["alloc"]
 cbor = ["alloc"]
 seed = []
 

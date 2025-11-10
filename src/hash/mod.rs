@@ -7,6 +7,8 @@
 //! - [`Blake2b512`] - 64-byte Blake2b hash (general purpose)
 //! - Additional cross-chain hashes (SHA-256, SHA-512, etc.) for compatibility
 
+use alloc::vec::Vec;
+
 mod blake2b;
 mod sha;
 

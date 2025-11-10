@@ -26,6 +26,9 @@
 //! - Draft-03: `0x04` (ECVRF-ED25519-SHA512-ELL2)
 //! - Draft-13: `0x03` (ECVRF-ED25519-SHA512-TAI)
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use curve25519_dalek::edwards::{CompressedEdwardsY, EdwardsPoint};
 use sha2::{Digest, Sha512};
 

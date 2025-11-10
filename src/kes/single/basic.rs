@@ -5,6 +5,9 @@
 
 use core::marker::PhantomData;
 
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 use crate::common::error::{CryptoError, Result};
 use crate::common::traits::DsignAlgorithm;
 use crate::kes::{KesAlgorithm, KesError, Period};
@@ -99,6 +102,7 @@ where
         D::gen_key_from_seed(seed)
     }
 
+    #[cfg(feature = "alloc")]
     fn raw_serialize_verification_key_kes(key: &Self::VerificationKey) -> Vec<u8> {
         D::serialize_verification_key(key)
     }
@@ -107,6 +111,7 @@ where
         D::deserialize_verification_key(bytes).ok()
     }
 
+    #[cfg(feature = "alloc")]
     fn raw_serialize_signature_kes(signature: &Self::Signature) -> Vec<u8> {
         D::serialize_signature(signature)
     }
