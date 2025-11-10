@@ -34,6 +34,9 @@
 4. **Build:** Release build verification
 5. **Package:** Create crate package
 6. **Publish:** Upload to crates.io using `CARGO_REGISTRY_TOKEN`
+   - Validates token is set before attempting publish
+   - Uses `--allow-dirty` flag to handle generated files
+   - Fails with clear error message if token is missing
 7. **Release:** Create GitHub Release with auto-generated notes
 
 ## Required Secrets
@@ -56,6 +59,8 @@
 6. Click "Add secret"
 
 **Environment variable name:** `CARGO_REGISTRY_TOKEN` (matches cardano-VRF)
+
+**Important:** The workflow validates that this secret is set before attempting to publish. If the secret is missing or empty, the workflow will fail with a clear error message instead of attempting to run cargo publish with an empty token.
 
 ## Triggering Workflows
 
