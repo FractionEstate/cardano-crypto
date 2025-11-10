@@ -253,7 +253,7 @@ impl VrfDraft13 {
         let gamma_bytes: [u8; 32] = proof[0..32].try_into().unwrap();
         let c_bytes_short: [u8; 16] = proof[32..48].try_into().unwrap();
         let s_bytes: [u8; 32] = proof[48..80].try_into().unwrap();
-        let h_string: &[u8] = &proof[80..128];
+        let h_string: [u8; 48] = proof[80..128].try_into().unwrap();
 
         // Decode points and scalars
         let gamma = bytes_to_point(&gamma_bytes)?;
@@ -289,7 +289,7 @@ impl VrfDraft13 {
         c_hasher.update([SUITE_DRAFT13]);
         c_hasher.update([TWO]);
         c_hasher.update(public_key);
-        c_hasher.update(h_string);
+        c_hasher.update(&h_string);
         c_hasher.update(gamma_bytes);
         c_hasher.update(k_b_bytes);
         c_hasher.update(k_h_bytes);

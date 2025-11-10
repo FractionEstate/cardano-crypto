@@ -128,19 +128,42 @@ pub fn cardano_vrf_verify(
 mod tests {
     use super::*;
     use crate::vrf::cardano_compat::prove::cardano_vrf_prove;
+    use curve25519_dalek::{constants::ED25519_BASEPOINT_POINT, scalar::Scalar};
+    use sha2::{Digest, Sha512};
+    use crate::common::point_to_bytes;
 
     #[test]
     fn test_verify_roundtrip() {
-        let mut sk = [0u8; 64];
-        sk[0..32].fill(1);
-        sk[32..64].copy_from_slice(&[2u8; 32]);
+        // Generate a proper Ed25519 keypair
+        let seed = [1u8; 32];
 
-        let pk = &sk[32..64];
+        // Derive secret scalar and public key (Ed25519 key derivation)
+        let mut hasher = Sha512::new();
+        hasher.update(&seed);
+        let hash = hasher.finalize();
+
+        let mut secret_scalar_bytes = [0u8; 32];
+        secret_scalar_bytes.copy_from_slice(&hash[0..32]);
+
+        // Clamp the scalar (Ed25519 standard)
+        secret_scalar_bytes[0] &= 248;
+        secret_scalar_bytes[31] &= 127;
+        secret_scalar_bytes[31] |= 64;
+
+        let scalar = Scalar::from_bytes_mod_order(secret_scalar_bytes);
+        let public_point = ED25519_BASEPOINT_POINT * scalar;
+        let public_key = point_to_bytes(&public_point);
+
+        // Construct 64-byte secret key (seed || public_key)
+        let mut sk = [0u8; 64];
+        sk[0..32].copy_from_slice(&seed);
+        sk[32..64].copy_from_slice(&public_key);
+
         let message = b"test";
 
         let proof = cardano_vrf_prove(&sk, message).expect("prove failed");
         let output = cardano_vrf_verify(
-            pk.try_into().unwrap(),
+            &public_key,
             &proof,
             message,
         )

@@ -41,7 +41,7 @@ fn demo_single_kes() -> Result<()> {
 
     // Generate keypair
     let seed = [1u8; 32];
-    let sk = MyKes::gen_key_kes_from_seed(&seed)?;
+    let sk = MyKes::gen_key_kes_from_seed_bytes(&seed)?;
     let vk = MyKes::derive_verification_key(&sk)?;
     println!("\n✓ Generated keypair from seed");
 
@@ -75,7 +75,7 @@ fn demo_single_kes() -> Result<()> {
 fn demo_sum2_kes() -> Result<()> {
     section("2. Sum2Kes - Binary Tree (4 periods)");
 
-    type MyKes = Sum2Kes<Blake2b256, Ed25519>;
+    type MyKes = Sum2Kes;
 
     println!("Algorithm: Sum²KES");
     println!("Total periods: {} (2² = 4)", MyKes::total_periods());
@@ -146,7 +146,7 @@ fn demo_sum2_kes() -> Result<()> {
 fn demo_sum6_kes() -> Result<()> {
     section("3. Sum6Kes - Cardano Standard (64 periods)");
 
-    type MyKes = Sum6Kes<Blake2b256, Ed25519>;
+    type MyKes = Sum6Kes;
 
     println!("Algorithm: Sum⁶KES");
     println!("Total periods: {} (2⁶ = 64)", MyKes::total_periods());
@@ -168,15 +168,16 @@ fn demo_sum6_kes() -> Result<()> {
     println!("\nDemonstrating key evolution across selected periods:");
 
     for &period in &test_periods {
+        let period_u64 = period as u64;
         // Update to target period
         while sk
             .as_ref()
-            .map(|_| period)
+            .map(|_| period_u64)
             .unwrap_or(0)
-            < period.saturating_sub(1)
+            < period_u64.saturating_sub(1)
         {
             if let Some(current_sk) = sk {
-                let current_period = period.saturating_sub(1);
+                let current_period = period_u64.saturating_sub(1);
                 sk = MyKes::update_kes(&(), current_sk, current_period)?;
             } else {
                 break;
@@ -227,14 +228,14 @@ fn demo_sum6_kes() -> Result<()> {
 fn demo_compact_sum6_kes() -> Result<()> {
     section("4. CompactSum6Kes - Optimized Signatures (64 periods)");
 
-    type MyKes = CompactSum6Kes<Blake2b256, Ed25519>;
+    type MyKes = CompactSum6Kes;
 
     println!("Algorithm: CompactSum⁶KES");
     println!("Total periods: {} (2⁶ = 64)", MyKes::total_periods());
     println!("Signature: {} bytes (compact)", MyKes::SIGNATURE_SIZE);
 
     // Compare with standard Sum6Kes
-    type StandardKes = Sum6Kes<Blake2b256, Ed25519>;
+    type StandardKes = Sum6Kes;
     println!(
         "Standard Sum6Kes signature: {} bytes",
         StandardKes::SIGNATURE_SIZE
