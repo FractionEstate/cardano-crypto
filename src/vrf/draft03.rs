@@ -78,6 +78,26 @@ use crate::vrf::cardano_compat::{cardano_vrf_prove, cardano_vrf_verify};
 ///
 /// Structure: Gamma (32 bytes) || c (16 bytes) || s (32 bytes)
 /// - Gamma: Hashed message point on Edwards curve
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::vrf::{VrfDraft03, draft03::PROOF_SIZE};
+///
+/// # fn main() -> cardano_crypto::common::Result<()> {
+/// // Generate a keypair
+/// let seed = [1u8; 32];
+/// let (sk, pk) = VrfDraft03::keypair_from_seed(&seed);
+///
+/// // Create a proof
+/// let message = b"test message";
+/// let proof = VrfDraft03::prove(&sk, message)?;
+///
+/// // Verify the proof length
+/// assert_eq!(proof.len(), PROOF_SIZE);
+/// # Ok(())
+/// # }
+/// ```
 /// - c: Challenge scalar (truncated to 16 bytes)
 /// - s: Response scalar
 pub const PROOF_SIZE: usize = 80;

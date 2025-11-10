@@ -21,6 +21,31 @@ use crate::kes::{KesAlgorithm, KesError, Period};
 /// # Type Parameters
 /// * `D` - The child KES algorithm
 /// * `H` - The hash algorithm for combining verification keys
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{KesAlgorithm, Period};
+/// use cardano_crypto::kes::sum::SumKes;
+/// use cardano_crypto::kes::single::SingleKes;
+/// use cardano_crypto::kes::hash::Blake2b256;
+/// use cardano_crypto::dsign::Ed25519;
+///
+/// type Sum2Kes = SumKes<SingleKes<Ed25519>, Blake2b256>;
+///
+/// # fn main() -> cardano_crypto::common::Result<()> {
+/// // Generate key for 2 periods
+/// let seed = [7u8; 32];
+/// let sk = Sum2Kes::gen_key_kes_from_seed_bytes(&seed)?;
+/// let vk = Sum2Kes::derive_verification_key(&sk)?;
+///
+/// // Sign at period 0
+/// let message = b"first period";
+/// let sig = Sum2Kes::sign_kes(&(), 0, message, &sk)?;
+/// Sum2Kes::verify_kes(&(), &vk, 0, message, &sig)?;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug)]
 pub struct SumKes<D, H>(PhantomData<(D, H)>)
 where

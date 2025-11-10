@@ -11,6 +11,16 @@ use sha3::{Keccak256, Sha3_256, Sha3_512};
 ///
 /// Used extensively in Bitcoin for transaction hashing, block mining,
 /// and address generation.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::sha256;
+///
+/// let data = b"Bitcoin transaction data";
+/// let hash = sha256(data);
+/// assert_eq!(hash.len(), 32);
+/// ```
 #[must_use]
 pub fn sha256(data: &[u8]) -> [u8; 32] {
     let mut hasher = Sha256::new();
@@ -22,6 +32,16 @@ pub fn sha256(data: &[u8]) -> [u8; 32] {
 ///
 /// Common pattern in Bitcoin: `SHA256(SHA256(data))`.
 /// Used for transaction IDs and block hashing.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::sha256d;
+///
+/// let data = b"Bitcoin block header";
+/// let hash = sha256d(data);
+/// assert_eq!(hash.len(), 32);
+/// ```
 #[must_use]
 pub fn sha256d(data: &[u8]) -> [u8; 32] {
     sha256(&sha256(data))

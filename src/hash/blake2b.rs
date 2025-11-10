@@ -15,6 +15,16 @@ use blake2::{Blake2b, Digest};
 ///
 /// Used in Cardano for address derivation and verification key hashing.
 /// This matches `Cardano.Crypto.Hash.Blake2b_224` from cardano-base.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::{HashAlgorithm, Blake2b224};
+///
+/// let data = b"Cardano address data";
+/// let hash = Blake2b224::hash(data);
+/// assert_eq!(hash.len(), Blake2b224::OUTPUT_SIZE); // 28 bytes
+/// ```
 #[derive(Clone, Debug)]
 pub struct Blake2b224;
 
@@ -33,6 +43,17 @@ impl HashAlgorithm for Blake2b224 {
 ///
 /// This is the hash algorithm used in Haskell's cardano-base for KES Sum types.
 /// Critical for binary compatibility with Cardano node verification keys.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::{HashAlgorithm, Blake2b256};
+///
+/// let vkey_data = b"KES verification key data";
+/// let hash = Blake2b256::hash(vkey_data);
+/// assert_eq!(hash.len(), 32);
+/// assert_eq!(Blake2b256::ALGORITHM_NAME, "blake2b_256");
+/// ```
 #[derive(Clone, Debug)]
 pub struct Blake2b256;
 
@@ -51,6 +72,16 @@ impl HashAlgorithm for Blake2b256 {
 ///
 /// General purpose Blake2b with maximum output size.
 /// Used for compatibility with existing code.
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::hash::{HashAlgorithm, Blake2b512};
+///
+/// let data = b"Large data for 64-byte hash";
+/// let hash = Blake2b512::hash(data);
+/// assert_eq!(hash.len(), 64);
+/// ```
 #[derive(Clone, Debug)]
 pub struct Blake2b512;
 

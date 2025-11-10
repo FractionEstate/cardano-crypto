@@ -10,6 +10,23 @@
 //! This module provides a simple wrapper around raw serialization that adds CBOR
 //! byte string encoding, matching the behavior of `encodeBytes` in Haskell's
 //! `Cardano.Binary` module.
+//!
+//! # Example
+//!
+//! ```rust
+//! use cardano_crypto::cbor::{encode_bytes, decode_bytes};
+//!
+//! # fn main() -> Result<(), cardano_crypto::cbor::CborError> {
+//! // Encode data as CBOR byte string
+//! let data = b"verification key data";
+//! let cbor_encoded = encode_bytes(data);
+//!
+//! // Decode CBOR byte string
+//! let decoded = decode_bytes(&cbor_encoded)?;
+//! assert_eq!(data, &decoded[..]);
+//! # Ok(())
+//! # }
+//! ```
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;

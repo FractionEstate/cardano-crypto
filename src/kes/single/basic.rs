@@ -19,6 +19,31 @@ use crate::kes::{KesAlgorithm, KesError, Period};
 ///
 /// # Type Parameters
 /// * `D` - The underlying digital signature algorithm
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{KesAlgorithm, Period};
+/// use cardano_crypto::kes::single::SingleKes;
+/// use cardano_crypto::dsign::Ed25519;
+///
+/// type SingleKesEd25519 = SingleKes<Ed25519>;
+///
+/// # fn main() -> cardano_crypto::common::Result<()> {
+/// // Generate key for single period
+/// let seed = [5u8; 32];
+/// let sk = SingleKesEd25519::gen_key_kes_from_seed_bytes(&seed)?;
+/// let vk = SingleKesEd25519::derive_verification_key(&sk)?;
+///
+/// // Sign at period 0 (only valid period)
+/// let message = b"single period message";
+/// let sig = SingleKesEd25519::sign_kes(&(), 0, message, &sk)?;
+///
+/// // Verify the signature
+/// SingleKesEd25519::verify_kes(&(), &vk, 0, message, &sig)?;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug)]
 pub struct SingleKes<D: DsignAlgorithm>(PhantomData<D>);
 

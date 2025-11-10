@@ -20,6 +20,31 @@ use crate::kes::{KesAlgorithm, KesError, Period};
 ///
 /// # Type Parameters
 /// * `D` - The underlying digital signature algorithm
+///
+/// # Example
+///
+/// ```rust
+/// use cardano_crypto::kes::{KesAlgorithm, Period};
+/// use cardano_crypto::kes::single::CompactSingleKes;
+/// use cardano_crypto::dsign::Ed25519;
+///
+/// type CompactSingleEd = CompactSingleKes<Ed25519>;
+///
+/// # fn main() -> cardano_crypto::common::Result<()> {
+/// // Generate key
+/// let seed = [9u8; 32];
+/// let sk = CompactSingleEd::gen_key_kes_from_seed_bytes(&seed)?;
+/// let vk = CompactSingleEd::derive_verification_key(&sk)?;
+///
+/// // Sign (signature includes vk)
+/// let message = b"compact sig";
+/// let sig = CompactSingleEd::sign_kes(&(), 0, message, &sk)?;
+///
+/// // Verify
+/// CompactSingleEd::verify_kes(&(), &vk, 0, message, &sig)?;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug)]
 pub struct CompactSingleKes<D: DsignAlgorithm>(PhantomData<D>);
 
