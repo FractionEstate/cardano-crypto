@@ -92,4 +92,3 @@ pub const TWO: u8 = 0x02;
 ///
 /// Appears in: `SHA-512(suite || THREE || proof_to_hash(...))`
 pub const THREE: u8 = 0x03;
-

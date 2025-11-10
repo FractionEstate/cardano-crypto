@@ -27,4 +27,3 @@ pub use compact::{
     CompactSum0Kes, CompactSum1Kes, CompactSum2Kes, CompactSum3Kes, CompactSum4Kes, CompactSum5Kes,
     CompactSum6Kes, CompactSum7Kes, CompactSumKes, CompactSumSignature, CompactSumSigningKey,
 };
-
