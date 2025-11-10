@@ -3,6 +3,16 @@
 //! This module provides binary tree composition of KES schemes:
 //! - `basic`: Standard SumKES with explicit verification keys
 //! - `compact`: Space-optimized CompactSumKES
+//!
+//! # Example
+//!
+//! ```rust
+//! use cardano_crypto::kes::{Sum2Kes, Sum6Kes};
+//!
+//! // Check periods
+//! assert_eq!(Sum2Kes::total_periods(), 4);
+//! assert_eq!(Sum6Kes::total_periods(), 64);
+//! ```
 
 pub mod basic;
 pub mod compact;
@@ -17,12 +27,12 @@ pub use compact::{
     CompactSum6Kes, CompactSum7Kes, CompactSumKes, CompactSumSignature, CompactSumSigningKey,
 };
 
-/// Small usage example for SumKES exports
-///
-/// ```rust
-/// use cardano_crypto::kes::{Sum2Kes, Sum6Kes};
-///
-/// // Check periods
-/// assert_eq!(Sum2Kes::total_periods(), 4);
-/// assert_eq!(Sum6Kes::total_periods(), 64);
-/// ```
+//! Small usage example for SumKES exports
+//!
+//! ```rust
+//! use cardano_crypto::kes::{Sum2Kes, Sum6Kes};
+//!
+//! // Check periods
+//! assert_eq!(Sum2Kes::total_periods(), 4);
+//! assert_eq!(Sum6Kes::total_periods(), 64);
+//! ```

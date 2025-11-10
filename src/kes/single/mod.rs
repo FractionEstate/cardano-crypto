@@ -12,11 +12,11 @@ pub use compact::{
     CompactKesComponents, CompactSingleKes, CompactSingleSig, OptimizedKesSignature,
 };
 
-/// Example showing exported Single/Compact types
-///
-/// ```rust
-/// use cardano_crypto::kes::{SingleKes, CompactSingleKes};
-/// // Types are available for use; just assert their associated constants compile
-/// assert_eq!(SingleKes::<cardano_crypto::dsign::Ed25519>::SEED_SIZE, 32);
-/// assert_eq!(CompactSingleKes::<cardano_crypto::dsign::Ed25519>::SEED_SIZE, 32);
-/// ```
+//! Example showing exported Single/Compact types
+//!
+//! ```rust
+//! use cardano_crypto::kes::{SingleKes, CompactSingleKes};
+//! // Types are available for use; just assert their associated constants compile
+//! assert_eq!(SingleKes::<cardano_crypto::dsign::Ed25519>::SEED_SIZE, 32);
+//! assert_eq!(CompactSingleKes::<cardano_crypto::dsign::Ed25519>::SEED_SIZE, 32);
+//! ```
