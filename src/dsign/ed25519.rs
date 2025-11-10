@@ -1,7 +1,53 @@
 //! Ed25519 digital signature implementation
 //!
-//! Pure Rust Ed25519 signatures compatible with Cardano.
-//! Extracted and adapted from cardano-base-rust.
+//! Provides a pure Rust implementation of the Ed25519 signature algorithm that is
+//! fully compatible with Cardano's signature verification. Ed25519 is the primary
+//! signature scheme used in Cardano for:
+//!
+//! - Transaction signing and verification
+//! - Stake pool operator keys
+//! - Payment address authentication
+//! - Governance actions
+//!
+//! # Specification
+//!
+//! - **Algorithm**: Ed25519 (Edwards-curve Digital Signature Algorithm)
+//! - **Curve**: Edwards25519 (twisted Edwards form of Curve25519)
+//! - **Security Level**: 128 bits (equivalent to 256-bit symmetric encryption)
+//! - **Public Key**: 32 bytes
+//! - **Signature**: 64 bytes
+//! - **Secret Key**: 64 bytes (32-byte seed + 32-byte public key, Cardano format)
+//!
+//! # Cardano Compatibility
+//!
+//! This implementation follows the same Ed25519 format used by Cardano nodes,
+//! ensuring full interoperability. Signatures generated here can be verified
+//! by Cardano and vice versa.
+//!
+//! # Security Features
+//!
+//! - Constant-time operations to prevent timing attacks
+//! - Protection against side-channel attacks
+//! - Deterministic signatures (no random number generation during signing)
+//! - Small keys and signatures for efficient storage and transmission
+//!
+//! # Examples
+//!
+//! ```
+//! use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
+//!
+//! // Generate keypair from seed
+//! let seed = [42u8; 32];
+//! let signing_key = Ed25519::gen_key(&seed);
+//! let verification_key = Ed25519::derive_verification_key(&signing_key);
+//!
+//! // Sign a message
+//! let message = b"Cardano transaction";
+//! let signature = Ed25519::sign(&signing_key, message);
+//!
+//! // Verify the signature
+//! assert!(Ed25519::verify(&verification_key, message, &signature).is_ok());
+//! ```
 
 use crate::common::CryptoError;
 
@@ -15,7 +61,29 @@ const VERIFICATION_KEY_SIZE: usize = 32;
 const SIGNATURE_SIZE: usize = 64;
 const SECRET_COMPOUND_SIZE: usize = 64;
 
-/// Ed25519 verification key (32 bytes)
+/// Ed25519 verification (public) key
+///
+/// A 32-byte compressed Edwards curve point representing the public verification key.
+/// This key is derived from the signing key and can be safely shared publicly.
+///
+/// # Format
+///
+/// The key is stored as a compressed Edwards curve point in canonical Ed25519 format:
+/// - 32 bytes representing the Y coordinate and sign bit
+/// - Valid points must lie on the Edwards25519 curve
+///
+/// # Usage
+///
+/// - Share publicly for signature verification
+/// - Use as input to verification operations
+/// - Derive Cardano addresses
+/// - Identify stake pools and payment credentials
+///
+/// # Security
+///
+/// - Cannot be used to forge signatures (one-way derivation from signing key)
+/// - Safe to transmit over untrusted networks
+/// - Should be validated before use to ensure it's a valid curve point
 #[derive(Clone, PartialEq, Eq)]
 pub struct Ed25519VerificationKey([u8; VERIFICATION_KEY_SIZE]);
 
@@ -26,7 +94,34 @@ impl core::fmt::Debug for Ed25519VerificationKey {
 }
 
 impl Ed25519VerificationKey {
-    /// Create from bytes, validating that they represent a valid Ed25519 point
+    /// Create a verification key from raw bytes with validation
+    ///
+    /// Validates that the provided bytes represent a valid Ed25519 public key
+    /// (a valid point on the Edwards25519 curve). This is important for security
+    /// as invalid keys could lead to verification failures or security issues.
+    ///
+    /// # Parameters
+    ///
+    /// * `bytes` - 32-byte slice containing the verification key
+    ///
+    /// # Returns
+    ///
+    /// * `Some(Ed25519VerificationKey)` if the bytes represent a valid key
+    /// * `None` if the bytes are invalid (wrong length or not a valid curve point)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
+    ///
+    /// let seed = [1u8; 32];
+    /// let signing_key = Ed25519::gen_key(&seed);
+    /// let verification_key = Ed25519::derive_verification_key(&signing_key);
+    ///
+    /// let bytes = verification_key.as_bytes();
+    /// let recovered = cardano_crypto::dsign::ed25519::Ed25519VerificationKey::from_bytes(bytes);
+    /// assert!(recovered.is_some());
+    /// ```
     pub fn from_bytes(bytes: &[u8]) -> Option<Self> {
         if bytes.len() != VERIFICATION_KEY_SIZE {
             return None;
@@ -38,17 +133,74 @@ impl Ed25519VerificationKey {
         Some(Self(array))
     }
 
-    /// Get the raw bytes
+    /// Get the raw bytes of the verification key
+    ///
+    /// Returns a reference to the internal 32-byte representation of the public key.
+    /// This is useful for serialization, transmission, or storage.
+    ///
+    /// # Returns
+    ///
+    /// Reference to the 32-byte verification key
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
+    ///
+    /// let seed = [2u8; 32];
+    /// let signing_key = Ed25519::gen_key(&seed);
+    /// let verification_key = Ed25519::derive_verification_key(&signing_key);
+    ///
+    /// let bytes = verification_key.as_bytes();
+    /// assert_eq!(bytes.len(), 32);
+    /// ```
     #[must_use]
     pub fn as_bytes(&self) -> &[u8; VERIFICATION_KEY_SIZE] {
         &self.0
     }
 }
 
-/// Ed25519 signing key (64 bytes: 32-byte seed + 32-byte verification key)
+/// Ed25519 signing (secret) key
 ///
-/// This matches the libsodium/Cardano convention of storing both the seed
-/// and the derived verification key together.
+/// A 64-byte compound key structure following the Cardano/libsodium convention.
+/// Contains both the 32-byte seed and the derived 32-byte verification key.
+///
+/// # Format
+///
+/// ```text
+/// [0..32]  - Seed (secret random bytes)
+/// [32..64] - Verification key (derived public key)
+/// ```
+///
+/// This format matches Cardano's key storage and allows efficient access to both
+/// the secret material and the derived public key without recomputation.
+///
+/// # Security
+///
+/// ⚠️ **CRITICAL**: This key must be kept absolutely secret!
+/// - Never transmit over untrusted networks
+/// - Store encrypted at rest
+/// - Zeroize from memory after use
+/// - Anyone with this key can forge signatures
+///
+/// # Usage
+///
+/// - Generate from a high-entropy 32-byte seed
+/// - Use for signing transactions and messages
+/// - Derive the public verification key
+/// - Store securely in wallets and key management systems
+///
+/// # Examples
+///
+/// ```
+/// use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
+///
+/// let seed = [42u8; 32];
+/// let signing_key = Ed25519::gen_key(&seed);
+///
+/// // The key contains both seed and verification key
+/// assert_eq!(signing_key.compound_bytes().len(), 64);
+/// ```
 #[derive(Clone, PartialEq, Eq)]
 pub struct Ed25519SigningKey([u8; SECRET_COMPOUND_SIZE]);
 
@@ -59,10 +211,32 @@ impl core::fmt::Debug for Ed25519SigningKey {
 }
 
 impl Ed25519SigningKey {
-    /// Create signing key from seed bytes
+    /// Create a signing key from a 32-byte seed
     ///
-    /// The signing key stores both the seed (first 32 bytes) and the
-    /// derived verification key (last 32 bytes).
+    /// Generates the complete 64-byte signing key structure from a 32-byte seed.
+    /// The verification key is automatically derived and stored in the second half.
+    ///
+    /// # Parameters
+    ///
+    /// * `seed` - 32-byte seed (must be from a cryptographically secure RNG)
+    ///
+    /// # Returns
+    ///
+    /// 64-byte compound signing key containing seed and derived verification key
+    ///
+    /// # Security
+    ///
+    /// The seed must come from a high-quality entropy source. Using predictable
+    /// or low-entropy seeds compromises security completely.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cardano_crypto::dsign::ed25519::Ed25519SigningKey;
+    ///
+    /// let seed = [42u8; 32];
+    /// let signing_key = Ed25519SigningKey::from_seed_bytes(&seed);
+    /// ```
     pub fn from_seed_bytes(seed: &[u8]) -> Self {
         let mut seed_array = [0u8; SEED_SIZE];
         seed_array.copy_from_slice(seed);
@@ -106,7 +280,46 @@ impl Ed25519SigningKey {
     }
 }
 
-/// Ed25519 signature (64 bytes)
+/// Ed25519 signature
+///
+/// A 64-byte digital signature produced by the Ed25519 algorithm.
+/// Signatures are deterministic (same message + key always produces the same signature).
+///
+/// # Format
+///
+/// ```text
+/// [0..32]  - R: Curve point (compressed)
+/// [32..64] - S: Scalar value
+/// ```
+///
+/// This follows the standard Ed25519 signature format as defined in RFC 8032.
+///
+/// # Properties
+///
+/// - **Deterministic**: No randomness needed; same inputs always produce same signature
+/// - **Compact**: Only 64 bytes for quantum-resistant security level
+/// - **Fast**: Efficient verification (important for blockchain validation)
+/// - **Non-malleable**: Prevents signature modification attacks
+///
+/// # Usage
+///
+/// - Prove authenticity of transactions
+/// - Verify message integrity
+/// - Bind messages to specific keys
+/// - Transmit proof of authorization
+///
+/// # Examples
+///
+/// ```
+/// use cardano_crypto::dsign::{Ed25519, DsignAlgorithm};
+///
+/// let seed = [1u8; 32];
+/// let signing_key = Ed25519::gen_key(&seed);
+/// let message = b"sign this message";
+/// let signature = Ed25519::sign(&signing_key, message);
+///
+/// assert_eq!(signature.as_bytes().len(), 64);
+/// ```
 #[derive(Clone, PartialEq, Eq)]
 pub struct Ed25519Signature([u8; SIGNATURE_SIZE]);
 
