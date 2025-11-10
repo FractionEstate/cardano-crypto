@@ -7,7 +7,7 @@ pub type Result<T> = core::result::Result<T, CryptoError>;
 pub type CryptoResult<T> = core::result::Result<T, CryptoError>;
 
 /// Common cryptographic error types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
 pub enum CryptoError {
     /// Invalid VRF proof structure or verification failed
@@ -78,6 +78,10 @@ pub enum CryptoError {
     #[cfg_attr(feature = "thiserror", error("Cryptographic operation failed"))]
     CryptoFailure,
 
+    /// KES-specific error
+    #[cfg_attr(feature = "thiserror", error("KES error: {0}"))]
+    KesError(crate::kes::KesError),
+
     /// Other error with description
     #[cfg_attr(feature = "thiserror", error("{0}"))]
     Other(&'static str),
@@ -104,6 +108,7 @@ impl fmt::Display for CryptoError {
             CryptoError::SerializationError => write!(f, "Serialization error"),
             CryptoError::DeserializationError => write!(f, "Deserialization error"),
             CryptoError::CryptoFailure => write!(f, "Cryptographic operation failed"),
+            CryptoError::KesError(e) => write!(f, "KES error: {}", e),
             CryptoError::Other(msg) => write!(f, "{}", msg),
         }
     }

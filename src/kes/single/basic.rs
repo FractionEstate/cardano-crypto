@@ -90,7 +90,7 @@ where
         }
     }
 
-    fn gen_key_kes_from_seed(seed: &[u8]) -> Result<Self::SigningKey> {
+    fn gen_key_kes_from_seed_bytes(seed: &[u8]) -> Result<Self::SigningKey> {
         if seed.len() != Self::SEED_SIZE {
             return Err(CryptoError::KesError(KesError::InvalidSeedLength {
                 expected: Self::SEED_SIZE,
@@ -129,7 +129,7 @@ mod tests {
     #[test]
     fn single_kes_only_supports_period_zero() {
         let seed = vec![1u8; <SingleKes<Ed25519>>::SEED_SIZE];
-        let sk = <SingleKes<Ed25519>>::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = <SingleKes<Ed25519>>::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let vk = <SingleKes<Ed25519>>::derive_verification_key(&sk).unwrap();
         let msg = b"test-message";
 
@@ -145,7 +145,7 @@ mod tests {
     #[test]
     fn single_kes_update_expires_after_period_zero() {
         let seed = vec![2u8; <SingleKes<Ed25519>>::SEED_SIZE];
-        let sk = <SingleKes<Ed25519>>::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = <SingleKes<Ed25519>>::gen_key_kes_from_seed_bytes(&seed).unwrap();
 
         // After period 0, the key should expire
         let updated = <SingleKes<Ed25519>>::update_kes(&(), sk, 0).unwrap();

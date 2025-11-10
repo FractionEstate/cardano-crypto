@@ -188,7 +188,7 @@ where
                 .ok_or(CryptoError::KesError(KesError::KeyExpired))?;
 
             // Generate right subtree key
-            let sk1 = D::gen_key_kes_from_seed(&r1_seed)?;
+            let sk1 = D::gen_key_kes_from_seed_bytes(&r1_seed)?;
 
             // Forget left subtree key
             D::forget_signing_key_kes(signing_key.sk);
@@ -230,7 +230,7 @@ where
         }
     }
 
-    fn gen_key_kes_from_seed(seed: &[u8]) -> Result<Self::SigningKey> {
+    fn gen_key_kes_from_seed_bytes(seed: &[u8]) -> Result<Self::SigningKey> {
         if seed.len() != Self::SEED_SIZE {
             return Err(CryptoError::KesError(KesError::InvalidSeedLength {
                 expected: Self::SEED_SIZE,
@@ -242,10 +242,10 @@ where
         let (r0_bytes, r1_bytes) = H::expand_seed(seed);
 
         // Generate keys for both subtrees
-        let sk0 = D::gen_key_kes_from_seed(&r0_bytes)?;
+        let sk0 = D::gen_key_kes_from_seed_bytes(&r0_bytes)?;
         let vk0 = D::derive_verification_key(&sk0)?;
 
-        let sk1 = D::gen_key_kes_from_seed(&r1_bytes)?;
+        let sk1 = D::gen_key_kes_from_seed_bytes(&r1_bytes)?;
         let vk1 = D::derive_verification_key(&sk1)?;
         D::forget_signing_key_kes(sk1); // Only keep left key initially
 
@@ -361,7 +361,7 @@ mod tests {
     #[test]
     fn sum1_key_generation_and_derivation() {
         let seed = vec![1u8; Sum1Kes::SEED_SIZE];
-        let sk = Sum1Kes::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = Sum1Kes::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let vk = Sum1Kes::derive_verification_key(&sk).unwrap();
 
         assert_eq!(vk.len(), Sum1Kes::VERIFICATION_KEY_SIZE);
@@ -371,7 +371,7 @@ mod tests {
     #[test]
     fn sum1_sign_and_verify_period_0() {
         let seed = vec![2u8; Sum1Kes::SEED_SIZE];
-        let sk = Sum1Kes::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = Sum1Kes::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let vk = Sum1Kes::derive_verification_key(&sk).unwrap();
         let msg = b"period-0-message";
 
@@ -382,7 +382,7 @@ mod tests {
     #[test]
     fn sum1_sign_and_verify_period_1() {
         let seed = vec![3u8; Sum1Kes::SEED_SIZE];
-        let sk = Sum1Kes::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = Sum1Kes::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let vk = Sum1Kes::derive_verification_key(&sk).unwrap();
 
         // Update to period 1
@@ -396,7 +396,7 @@ mod tests {
     #[test]
     fn sum1_key_expires_after_period_1() {
         let seed = vec![4u8; Sum1Kes::SEED_SIZE];
-        let sk = Sum1Kes::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = Sum1Kes::gen_key_kes_from_seed_bytes(&seed).unwrap();
 
         // Update through period 0
         let sk = Sum1Kes::update_kes(&(), sk, 0).unwrap().unwrap();
@@ -409,7 +409,7 @@ mod tests {
     #[test]
     fn sum2_full_lifecycle() {
         let seed = vec![5u8; Sum2Kes::SEED_SIZE];
-        let mut sk = Sum2Kes::gen_key_kes_from_seed(&seed).unwrap();
+        let mut sk = Sum2Kes::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let vk = Sum2Kes::derive_verification_key(&sk).unwrap();
 
         // Test all 4 periods
@@ -431,7 +431,7 @@ mod tests {
     #[test]
     fn sum1_signature_serialization() {
         let seed = vec![6u8; Sum1Kes::SEED_SIZE];
-        let sk = Sum1Kes::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = Sum1Kes::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let vk = Sum1Kes::derive_verification_key(&sk).unwrap();
         let msg = b"serialize-test";
 

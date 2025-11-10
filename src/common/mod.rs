@@ -19,6 +19,7 @@ pub mod curve;
 pub mod hash;
 
 pub mod traits;
+/// Security-related utilities and constant-time operations
 pub mod security;
 
 #[cfg(feature = "vrf")]

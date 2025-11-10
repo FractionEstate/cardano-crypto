@@ -55,6 +55,17 @@ pub trait OptimizedKesSignature {
     fn extract_verification_key(&self) -> &Self::VerificationKey;
 }
 
+/// Trait for KES algorithms that support compact composition
+///
+/// This trait allows CompactSumKES to extract verification keys from signatures.
+pub trait CompactKesComponents: KesAlgorithm {
+    /// Extract the active verification key from a signature at a given period
+    fn active_verification_key_from_signature(
+        signature: &Self::Signature,
+        period: Period,
+    ) -> Self::VerificationKey;
+}
+
 impl<D: DsignAlgorithm> OptimizedKesSignature for CompactSingleSig<D> {
     type VerificationKey = D::VerificationKey;
 
@@ -143,7 +154,7 @@ where
         }
     }
 
-    fn gen_key_kes_from_seed(seed: &[u8]) -> Result<Self::SigningKey> {
+    fn gen_key_kes_from_seed_bytes(seed: &[u8]) -> Result<Self::SigningKey> {
         if seed.len() != Self::SEED_SIZE {
             return Err(CryptoError::KesError(KesError::InvalidSeedLength {
                 expected: Self::SEED_SIZE,
@@ -189,6 +200,20 @@ where
     }
 }
 
+impl<D> CompactKesComponents for CompactSingleKes<D>
+where
+    D: DsignAlgorithm,
+    D::VerificationKey: Clone,
+    D::Signature: Clone,
+{
+    fn active_verification_key_from_signature(
+        signature: &Self::Signature,
+        _period: Period,
+    ) -> Self::VerificationKey {
+        signature.verification_key.clone()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -199,7 +224,7 @@ mod tests {
     #[test]
     fn compact_single_only_supports_period_zero() {
         let seed = vec![1u8; CompactSingleEd25519::SEED_SIZE];
-        let sk = CompactSingleEd25519::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = CompactSingleEd25519::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let vk = CompactSingleEd25519::derive_verification_key(&sk).unwrap();
         let msg = b"test-message";
 
@@ -214,7 +239,7 @@ mod tests {
     #[test]
     fn compact_single_embeds_verification_key() {
         let seed = vec![2u8; CompactSingleEd25519::SEED_SIZE];
-        let sk = CompactSingleEd25519::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = CompactSingleEd25519::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let vk = CompactSingleEd25519::derive_verification_key(&sk).unwrap();
         let msg = b"embedded-vk-test";
 
@@ -231,7 +256,7 @@ mod tests {
     #[test]
     fn compact_single_signature_size() {
         let seed = vec![3u8; CompactSingleEd25519::SEED_SIZE];
-        let sk = CompactSingleEd25519::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = CompactSingleEd25519::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let msg = b"size-test";
 
         let sig = CompactSingleEd25519::sign_kes(&(), 0, msg, &sk).unwrap();
@@ -246,7 +271,7 @@ mod tests {
     #[test]
     fn compact_single_serialization_roundtrip() {
         let seed = vec![4u8; CompactSingleEd25519::SEED_SIZE];
-        let sk = CompactSingleEd25519::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = CompactSingleEd25519::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let msg = b"roundtrip-test";
 
         let sig = CompactSingleEd25519::sign_kes(&(), 0, msg, &sk).unwrap();
@@ -264,7 +289,7 @@ mod tests {
     #[test]
     fn compact_single_update_expires_after_period_zero() {
         let seed = vec![5u8; CompactSingleEd25519::SEED_SIZE];
-        let sk = CompactSingleEd25519::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = CompactSingleEd25519::gen_key_kes_from_seed_bytes(&seed).unwrap();
 
         // After period 0, key should expire
         let updated = CompactSingleEd25519::update_kes(&(), sk, 0).unwrap();
@@ -277,7 +302,7 @@ mod tests {
     #[test]
     fn compact_single_verification_uses_embedded_key() {
         let seed = vec![6u8; CompactSingleEd25519::SEED_SIZE];
-        let sk = CompactSingleEd25519::gen_key_kes_from_seed(&seed).unwrap();
+        let sk = CompactSingleEd25519::gen_key_kes_from_seed_bytes(&seed).unwrap();
         let msg = b"embedded-verification";
 
         let sig = CompactSingleEd25519::sign_kes(&(), 0, msg, &sk).unwrap();
@@ -285,7 +310,7 @@ mod tests {
         // Even if we provide a different verification key, the signature
         // verification should use the embedded one
         let different_seed = vec![99u8; CompactSingleEd25519::SEED_SIZE];
-        let different_sk = CompactSingleEd25519::gen_key_kes_from_seed(&different_seed).unwrap();
+        let different_sk = CompactSingleEd25519::gen_key_kes_from_seed_bytes(&different_seed).unwrap();
         let different_vk = CompactSingleEd25519::derive_verification_key(&different_sk).unwrap();
 
         // Verification with different VK parameter should still work

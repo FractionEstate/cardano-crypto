@@ -8,4 +8,4 @@ pub mod basic;
 pub mod compact;
 
 pub use basic::SingleKes;
-pub use compact::{CompactSingleKes, CompactSingleSig, OptimizedKesSignature};
+pub use compact::{CompactKesComponents, CompactSingleKes, CompactSingleSig, OptimizedKesSignature};

@@ -18,11 +18,11 @@ mod tests {
         let seed = [42u8; 32];
 
         // Generate key from seed
-        let sk1 = TestKes::gen_key_kes_from_seed(&seed)?;
+        let sk1 = TestKes::gen_key_kes_from_seed_bytes(&seed)?;
         let vk1 = TestKes::derive_verification_key(&sk1)?;
 
         // Regenerate from same seed
-        let sk2 = TestKes::gen_key_kes_from_seed(&seed)?;
+        let sk2 = TestKes::gen_key_kes_from_seed_bytes(&seed)?;
         let vk2 = TestKes::derive_verification_key(&sk2)?;
 
         // Verification keys should match (Ed25519 VK has as_bytes())
@@ -46,10 +46,10 @@ mod tests {
     /// Test vector for Sum2KES key evolution
     #[test]
     fn test_sum2_kes_evolution() -> Result<()> {
-        type TestKes = Sum2Kes<Blake2b256, Ed25519>;
+        type TestKes = Sum2Kes;
 
         let seed = [99u8; 32];
-        let mut sk = TestKes::gen_key_kes_from_seed(&seed)?;
+        let mut sk = TestKes::gen_key_kes_from_seed_bytes(&seed)?;
         let vk = TestKes::derive_verification_key(&sk)?;
 
         // Test all 4 periods
@@ -85,12 +85,12 @@ mod tests {
     /// Test vector for Sum6KES (Cardano standard)
     #[test]
     fn test_sum6_kes_cardano_standard() -> Result<()> {
-        type TestKes = Sum6Kes<Blake2b256, Ed25519>;
+        type TestKes = Sum6Kes;
 
         // Cardano-style seed
         let seed = [0x5F; 32];
 
-        let sk = TestKes::gen_key_kes_from_seed(&seed)?;
+        let sk = TestKes::gen_key_kes_from_seed_bytes(&seed)?;
         let vk = TestKes::derive_verification_key(&sk)?;
 
         // Test specific periods relevant to Cardano
@@ -114,10 +114,10 @@ mod tests {
     /// Test that verification keys remain constant across key evolution
     #[test]
     fn test_verification_key_stability() -> Result<()> {
-        type TestKes = Sum2Kes<Blake2b256, Ed25519>;
+        type TestKes = Sum2Kes;
 
         let seed = [7u8; 32];
-        let mut sk = TestKes::gen_key_kes_from_seed(&seed)?;
+        let mut sk = TestKes::gen_key_kes_from_seed_bytes(&seed)?;
         let vk_initial = TestKes::derive_verification_key(&sk)?;
 
         // Evolve key through all periods
@@ -141,10 +141,10 @@ mod tests {
     /// Test cross-period signature validation fails correctly
     #[test]
     fn test_cross_period_validation_failure() -> Result<()> {
-        type TestKes = Sum2Kes<Blake2b256, Ed25519>;
+        type TestKes = Sum2Kes;
 
         let seed = [3u8; 32];
-        let sk = TestKes::gen_key_kes_from_seed(&seed)?;
+        let sk = TestKes::gen_key_kes_from_seed_bytes(&seed)?;
         let vk = TestKes::derive_verification_key(&sk)?;
 
         let message = b"cross period test";
@@ -172,7 +172,7 @@ mod tests {
         type TestKes = SingleKes<Ed25519>;
 
         let seed = [11u8; 32];
-        let sk = TestKes::gen_key_kes_from_seed(&seed)?;
+        let sk = TestKes::gen_key_kes_from_seed_bytes(&seed)?;
         let vk = TestKes::derive_verification_key(&sk)?;
 
         let message1 = b"original message";

@@ -4,7 +4,6 @@
 //! Extracted and adapted from cardano-base-rust.
 
 use crate::common::CryptoError;
-use super::DsignAlgorithm;
 
 use ed25519_dalek::{
     Signature as DalekSignature, SigningKey as DalekSigningKey, VerifyingKey as DalekVerifyingKey,
@@ -199,10 +198,7 @@ impl CommonDsignAlgorithm for Ed25519 {
 
     fn gen_key_from_seed(seed: &[u8]) -> Result<Self::SigningKey> {
         if seed.len() != SEED_SIZE {
-            return Err(CommonCryptoError::InvalidSeedLength {
-                expected: SEED_SIZE,
-                actual: seed.len(),
-            });
+            return Err(CommonCryptoError::InvalidKeyLength);
         }
         Ok(Ed25519SigningKey::from_seed_bytes(seed))
     }

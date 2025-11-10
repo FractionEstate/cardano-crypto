@@ -34,13 +34,23 @@ pub type Period = u64;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum KesError {
     /// Period out of valid range
-    PeriodOutOfRange { period: Period, max_period: Period },
+    PeriodOutOfRange {
+        /// Current period
+        period: Period,
+        /// Maximum allowed period
+        max_period: Period,
+    },
     /// Key has expired
     KeyExpired,
     /// Verification failed
     VerificationFailed,
     /// Invalid seed length
-    InvalidSeedLength { expected: usize, actual: usize },
+    InvalidSeedLength {
+        /// Expected seed length
+        expected: usize,
+        /// Actual seed length provided
+        actual: usize,
+    },
     /// Key update failed
     UpdateFailed,
 }
@@ -73,6 +83,9 @@ impl core::fmt::Display for KesError {
 impl std::error::Error for KesError {}
 
 /// Trait for KES algorithms
+///
+/// Follows the design from "Composition and Efficiency Tradeoffs for Forward-Secure Digital Signatures"
+/// by Tal Malkin, Daniele Micciancio, and Sara Miner (https://eprint.iacr.org/2001/034).
 pub trait KesAlgorithm {
     /// Verification key type
     type VerificationKey;
@@ -97,8 +110,8 @@ pub trait KesAlgorithm {
     /// Total number of periods this KES scheme supports
     fn total_periods() -> Period;
 
-    /// Generate signing key from seed
-    fn gen_key_kes_from_seed(seed: &[u8]) -> Result<Self::SigningKey>;
+    /// Generate signing key from seed bytes
+    fn gen_key_kes_from_seed_bytes(seed: &[u8]) -> Result<Self::SigningKey>;
 
     /// Derive verification key from signing key
     fn derive_verification_key(signing_key: &Self::SigningKey) -> Result<Self::VerificationKey>;

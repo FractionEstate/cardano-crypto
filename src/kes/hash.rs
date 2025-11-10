@@ -10,7 +10,7 @@
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
-use crate::hash::{Blake2bHash, HashAlgorithm};
+use crate::hash::HashAlgorithm;
 
 /// Trait for hash algorithms used in KES schemes
 ///
@@ -67,8 +67,7 @@ impl KesHashAlgorithm for Blake2b224 {
     const ALGORITHM_NAME: &'static str = "Blake2b-224";
 
     fn hash(data: &[u8]) -> Vec<u8> {
-        use crate::hash::Blake2b224Hash;
-        Blake2b224Hash::hash(data).to_vec()
+        crate::hash::Blake2b224::hash(data).to_vec()
     }
 }
 
@@ -83,8 +82,7 @@ impl KesHashAlgorithm for Blake2b256 {
     const ALGORITHM_NAME: &'static str = "Blake2b-256";
 
     fn hash(data: &[u8]) -> Vec<u8> {
-        use crate::hash::Blake2b256Hash;
-        Blake2b256Hash::hash(data).to_vec()
+        crate::hash::Blake2b256::hash(data).to_vec()
     }
 }
 
@@ -97,8 +95,7 @@ impl KesHashAlgorithm for Blake2b512 {
     const ALGORITHM_NAME: &'static str = "Blake2b-512";
 
     fn hash(data: &[u8]) -> Vec<u8> {
-        use crate::hash::Blake2b512Hash;
-        Blake2b512Hash::hash(data).to_vec()
+        crate::hash::Blake2b512::hash(data).to_vec()
     }
 }
 

@@ -226,7 +226,7 @@ impl VrfDraft13 {
         proof[0..32].copy_from_slice(&gamma_bytes);
         proof[32..48].copy_from_slice(&c_bytes_short);
         proof[48..80].copy_from_slice(&s_bytes);
-        proof[80..128].copy_from_slice(h_string);
+        proof[80..128].copy_from_slice(&h_string);
 
         Ok(proof)
     }
@@ -269,9 +269,7 @@ impl VrfDraft13 {
 
         // Verify H-string matches
         if h_string != expected_h_string {
-            return Err(crate::common::error::Error::verification_failed(
-                "VRF Draft-13 H-string mismatch",
-            ));
+            return Err(crate::common::error::CryptoError::VerificationFailed);
         }
 
         // Verify equations using batch scalar multiplication
@@ -301,9 +299,7 @@ impl VrfDraft13 {
 
         // Verify challenge matches
         if c_bytes_short != recomputed_c_bytes {
-            return Err(crate::common::error::Error::verification_failed(
-                "VRF Draft-13 challenge mismatch",
-            ));
+            return Err(crate::common::error::CryptoError::VerificationFailed);
         }
 
         // Compute VRF output

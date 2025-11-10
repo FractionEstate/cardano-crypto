@@ -9,7 +9,6 @@ use crate::common::error::{CryptoError, Result};
 use crate::kes::hash::KesHashAlgorithm;
 use crate::kes::single::compact::{CompactKesComponents, CompactSingleKes, OptimizedKesSignature};
 use crate::kes::{KesAlgorithm, Period};
-use crate::seed::Seed;
 
 /// CompactSumKES is an optimized version of SumKES that stores fewer verification keys.
 ///
@@ -106,7 +105,9 @@ where
     type VerificationKey = Vec<u8>; // Hash of (vk0, vk1)
     type SigningKey = CompactSumSigningKey<D, H>;
     type Signature = CompactSumSignature<D, H>;
+    type Context = D::Context;
 
+    const ALGORITHM_NAME: &'static str = D::ALGORITHM_NAME;
     const SEED_SIZE: usize = D::SEED_SIZE;
     const VERIFICATION_KEY_SIZE: usize = H::OUTPUT_SIZE;
     const SIGNING_KEY_SIZE: usize =
@@ -120,12 +121,13 @@ where
 
     fn derive_verification_key(signing_key: &Self::SigningKey) -> Result<Self::VerificationKey> {
         // vk = H(vk0 || vk1)
-        let vk0_bytes = D::raw_serialize_verification_key(&signing_key.vk0);
-        let vk1_bytes = D::raw_serialize_verification_key(&signing_key.vk1);
+        let vk0_bytes = D::raw_serialize_verification_key_kes(&signing_key.vk0);
+        let vk1_bytes = D::raw_serialize_verification_key_kes(&signing_key.vk1);
         Ok(H::hash_concat(&vk0_bytes, &vk1_bytes))
     }
 
-    fn sign(
+    fn sign_kes(
+        context: &Self::Context,
         period: Period,
         message: &[u8],
         signing_key: &Self::SigningKey,
@@ -134,11 +136,11 @@ where
 
         let (sigma, vk_other) = if period < t_half {
             // Use left subtree, store right vk
-            let sig = D::sign(period, message, &signing_key.sk)?;
+            let sig = D::sign_kes(context, period, message, &signing_key.sk)?;
             (sig, signing_key.vk1.clone())
         } else {
             // Use right subtree, store left vk
-            let sig = D::sign(period - t_half, message, &signing_key.sk)?;
+            let sig = D::sign_kes(context, period - t_half, message, &signing_key.sk)?;
             (sig, signing_key.vk0.clone())
         };
 
@@ -149,7 +151,8 @@ where
         })
     }
 
-    fn verify(
+    fn verify_kes(
+        context: &Self::Context,
         verification_key: &Self::VerificationKey,
         period: Period,
         message: &[u8],
@@ -181,19 +184,23 @@ where
         };
 
         // Verify that H(vk0 || vk1) matches the provided verification key
-        let vk0_bytes = D::raw_serialize_verification_key(&vk0);
-        let vk1_bytes = D::raw_serialize_verification_key(&vk1);
+        let vk0_bytes = D::raw_serialize_verification_key_kes(&vk0);
+        let vk1_bytes = D::raw_serialize_verification_key_kes(&vk1);
         let computed_vk = H::hash_concat(&vk0_bytes, &vk1_bytes);
 
         if &computed_vk != verification_key {
-            return Err(Error::verification_failed("CompactSumKES verification key mismatch"));
+            return Err(CryptoError::VerificationFailed);
         }
 
         // Verify the signature against the active verification key
-        D::verify(&vk_active, child_period, message, &signature.sigma)
+        D::verify_kes(context, &vk_active, child_period, message, &signature.sigma)
     }
 
-    fn update(mut signing_key: Self::SigningKey, period: Period) -> Result<Option<Self::SigningKey>> {
+    fn update_kes(
+        context: &Self::Context,
+        mut signing_key: Self::SigningKey,
+        period: Period,
+    ) -> Result<Option<Self::SigningKey>> {
         let t_half = D::total_periods();
 
         if period + 1 >= 2 * t_half {
@@ -205,10 +212,9 @@ where
             let r1_seed = signing_key
                 .r1_seed
                 .take()
-                .ok_or_else(|| Error::key_expired("CompactSumKES r1_seed already consumed"))?;
+                .ok_or(CryptoError::KesError(crate::kes::KesError::KeyExpired))?;
 
-            let seed = Seed::from_bytes(&r1_seed);
-            let sk1 = D::gen_key(&seed)?;
+            let sk1 = D::gen_key_kes_from_seed_bytes(&r1_seed)?;
 
             Ok(Some(CompactSumSigningKey {
                 sk: sk1,
@@ -219,7 +225,7 @@ where
             }))
         } else if period + 1 < t_half {
             // Still in left subtree
-            let updated_sk = D::update(signing_key.sk, period)?;
+            let updated_sk = D::update_kes(context, signing_key.sk, period)?;
             match updated_sk {
                 Some(sk) => Ok(Some(CompactSumSigningKey {
                     sk,
@@ -233,7 +239,7 @@ where
         } else {
             // In right subtree
             let adjusted_period = period - t_half;
-            let updated_sk = D::update(signing_key.sk, adjusted_period)?;
+            let updated_sk = D::update_kes(context, signing_key.sk, adjusted_period)?;
             match updated_sk {
                 Some(sk) => Ok(Some(CompactSumSigningKey {
                     sk,
@@ -247,16 +253,16 @@ where
         }
     }
 
-    fn gen_key_from_seed(seed: &[u8]) -> Result<Self::SigningKey> {
+    fn gen_key_kes_from_seed_bytes(seed: &[u8]) -> Result<Self::SigningKey> {
         // Split seed into r0 and r1 using the hash algorithm
         let (r0_bytes, r1_bytes) = H::expand_seed(seed);
 
         // Generate sk_0 from r0
-        let sk0 = D::gen_key_from_seed(&r0_bytes)?;
+        let sk0 = D::gen_key_kes_from_seed_bytes(&r0_bytes)?;
         let vk0 = D::derive_verification_key(&sk0)?;
 
         // Generate sk_1 from r1 (only to derive vk1, then forget)
-        let sk1 = D::gen_key_from_seed(&r1_bytes)?;
+        let sk1 = D::gen_key_kes_from_seed_bytes(&r1_bytes)?;
         let vk1 = D::derive_verification_key(&sk1)?;
 
         Ok(CompactSumSigningKey {
@@ -268,11 +274,11 @@ where
         })
     }
 
-    fn raw_serialize_verification_key(key: &Self::VerificationKey) -> Vec<u8> {
+    fn raw_serialize_verification_key_kes(key: &Self::VerificationKey) -> Vec<u8> {
         key.clone()
     }
 
-    fn raw_deserialize_verification_key(bytes: &[u8]) -> Option<Self::VerificationKey> {
+    fn raw_deserialize_verification_key_kes(bytes: &[u8]) -> Option<Self::VerificationKey> {
         if bytes.len() == Self::VERIFICATION_KEY_SIZE {
             Some(bytes.to_vec())
         } else {
@@ -280,13 +286,13 @@ where
         }
     }
 
-    fn raw_serialize_signature(signature: &Self::Signature) -> Vec<u8> {
-        let mut result = D::raw_serialize_signature(&signature.sigma);
-        result.extend_from_slice(&D::raw_serialize_verification_key(&signature.vk_other));
+    fn raw_serialize_signature_kes(signature: &Self::Signature) -> Vec<u8> {
+        let mut result = D::raw_serialize_signature_kes(&signature.sigma);
+        result.extend_from_slice(&D::raw_serialize_verification_key_kes(&signature.vk_other));
         result
     }
 
-    fn raw_deserialize_signature(bytes: &[u8]) -> Option<Self::Signature> {
+    fn raw_deserialize_signature_kes(bytes: &[u8]) -> Option<Self::Signature> {
         if bytes.len() != Self::SIGNATURE_SIZE {
             return None;
         }
@@ -294,14 +300,19 @@ where
         let sig_bytes = &bytes[0..D::SIGNATURE_SIZE];
         let vk_bytes = &bytes[D::SIGNATURE_SIZE..];
 
-        let sigma = D::raw_deserialize_signature(sig_bytes)?;
-        let vk_other = D::raw_deserialize_verification_key(vk_bytes)?;
+        let sigma = D::raw_deserialize_signature_kes(sig_bytes)?;
+        let vk_other = D::raw_deserialize_verification_key_kes(vk_bytes)?;
 
         Some(CompactSumSignature {
             sigma,
             vk_other,
             _phantom: PhantomData,
         })
+    }
+
+    fn forget_signing_key_kes(signing_key: Self::SigningKey) {
+        D::forget_signing_key_kes(signing_key.sk);
+        // vk0, vk1, r1_seed will be dropped automatically
     }
 }
 
@@ -332,15 +343,6 @@ pub type CompactSum6Kes = CompactSumKes<CompactSum5Kes, Blake2b256>;
 
 /// 2^7 = 128 periods (compact, standard Cardano KES)
 pub type CompactSum7Kes = CompactSumKes<CompactSum6Kes, Blake2b256>;
-
-impl CompactKesComponents for CompactSum0Kes {
-    fn active_verification_key_from_signature(
-        signature: &Self::Signature,
-        _period: Period,
-    ) -> Self::VerificationKey {
-        signature.extract_verification_key().clone()
-    }
-}
 
 impl<D, H> CompactKesComponents for CompactSumKes<D, H>
 where
@@ -373,8 +375,8 @@ where
             (vk_other.clone(), vk_active.clone())
         };
 
-        let left_bytes = D::raw_serialize_verification_key(&vk_left);
-        let right_bytes = D::raw_serialize_verification_key(&vk_right);
+        let left_bytes = D::raw_serialize_verification_key_kes(&vk_left);
+        let right_bytes = D::raw_serialize_verification_key_kes(&vk_right);
         H::hash_concat(&left_bytes, &right_bytes)
     }
 }

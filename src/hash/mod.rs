@@ -14,12 +14,6 @@ mod sha;
 pub use blake2b::{Blake2b224, Blake2b256, Blake2b512};
 pub use sha::{hash160, keccak256, ripemd160, sha256, sha256d, sha3_256, sha3_512, sha512};
 
-// Type aliases for compatibility
-pub type Blake2bHash = Blake2b256;
-pub type Blake2b224Hash = Blake2b224;
-pub type Blake2b256Hash = Blake2b256;
-pub type Blake2b512Hash = Blake2b512;
-
 /// Trait for hash algorithms used in KES schemes
 ///
 /// This trait provides a simple interface for hash algorithms used in
