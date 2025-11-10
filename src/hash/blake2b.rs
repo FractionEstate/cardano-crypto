@@ -166,7 +166,11 @@ mod tests {
 
     #[test]
     fn test_blake2b256_not_simple_truncation() {
-        let cases = [b"".as_ref(), b"cardano".as_ref(), b"longer-message".as_ref()];
+        let cases = [
+            b"".as_ref(),
+            b"cardano".as_ref(),
+            b"longer-message".as_ref(),
+        ];
 
         for input in cases {
             let blake512 = Blake2b512::hash(input);
@@ -177,7 +181,11 @@ mod tests {
 
     #[test]
     fn test_blake2b224_not_truncation() {
-        let cases = [b"".as_ref(), b"address-key".as_ref(), b"longer-message".as_ref()];
+        let cases = [
+            b"".as_ref(),
+            b"address-key".as_ref(),
+            b"longer-message".as_ref(),
+        ];
 
         for input in cases {
             let blake512 = Blake2b512::hash(input);

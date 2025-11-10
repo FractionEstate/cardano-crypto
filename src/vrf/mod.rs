@@ -21,30 +21,20 @@
 //! let output = VrfDraft03::verify(&public_key, &proof, message)?;
 //! ```
 
+pub mod cardano_compat;
 pub mod draft03;
 pub mod draft13;
-pub mod cardano_compat;
 pub mod test_vectors;
 
 // Re-export main types
 pub use draft03::{
-    VrfDraft03,
-    PROOF_SIZE as DRAFT03_PROOF_SIZE,
-    PUBLIC_KEY_SIZE,
-    SECRET_KEY_SIZE,
+    VrfDraft03, OUTPUT_SIZE, PROOF_SIZE as DRAFT03_PROOF_SIZE, PUBLIC_KEY_SIZE, SECRET_KEY_SIZE,
     SEED_SIZE,
-    OUTPUT_SIZE,
 };
 
-pub use draft13::{
-    VrfDraft13,
-    PROOF_SIZE as DRAFT13_PROOF_SIZE,
-};
+pub use draft13::{VrfDraft13, PROOF_SIZE as DRAFT13_PROOF_SIZE};
 
 // Re-export Cardano compatibility functions for advanced usage
 pub use cardano_compat::{
-    cardano_vrf_prove,
-    cardano_vrf_verify,
-    cardano_clear_cofactor,
-    cardano_hash_to_curve,
+    cardano_clear_cofactor, cardano_hash_to_curve, cardano_vrf_prove, cardano_vrf_verify,
 };

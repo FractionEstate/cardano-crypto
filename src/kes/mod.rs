@@ -22,9 +22,9 @@ pub mod test_vectors;
 pub use hash::{Blake2b224, Blake2b256, Blake2b512, KesHashAlgorithm};
 pub use single::{CompactSingleKes, CompactSingleSig, OptimizedKesSignature, SingleKes};
 pub use sum::{
-    CompactSum0Kes, CompactSum1Kes, CompactSum2Kes, CompactSum3Kes, CompactSum4Kes,
-    CompactSum5Kes, CompactSum6Kes, CompactSum7Kes, CompactSumKes, Sum0Kes, Sum1Kes, Sum2Kes,
-    Sum3Kes, Sum4Kes, Sum5Kes, Sum6Kes, Sum7Kes, SumKes,
+    CompactSum0Kes, CompactSum1Kes, CompactSum2Kes, CompactSum3Kes, CompactSum4Kes, CompactSum5Kes,
+    CompactSum6Kes, CompactSum7Kes, CompactSumKes, Sum0Kes, Sum1Kes, Sum2Kes, Sum3Kes, Sum4Kes,
+    Sum5Kes, Sum6Kes, Sum7Kes, SumKes,
 };
 
 /// KES period type (0 to 2^N - 1)
@@ -59,11 +59,7 @@ impl core::fmt::Display for KesError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::PeriodOutOfRange { period, max_period } => {
-                write!(
-                    f,
-                    "Period {} out of range (max: {})",
-                    period, max_period
-                )
+                write!(f, "Period {} out of range (max: {})", period, max_period)
             }
             Self::KeyExpired => write!(f, "KES key has expired"),
             Self::VerificationFailed => write!(f, "KES signature verification failed"),

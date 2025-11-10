@@ -64,7 +64,8 @@ mod tests {
 
             // Signature should fail for wrong period
             if period > 0 {
-                let wrong_result = TestKes::verify_kes(&(), &vk, period - 1, message.as_bytes(), &sig);
+                let wrong_result =
+                    TestKes::verify_kes(&(), &vk, period - 1, message.as_bytes(), &sig);
                 assert!(wrong_result.is_err());
             }
 
@@ -127,8 +128,7 @@ mod tests {
             // Verification key should never change (both are Vec<u8> for Sum2Kes)
             assert_eq!(vk_initial, vk_current);
 
-            sk = TestKes::update_kes(&(), sk, period)?
-                .expect("Key should not expire");
+            sk = TestKes::update_kes(&(), sk, period)?.expect("Key should not expire");
         }
 
         // Check one final time at last period

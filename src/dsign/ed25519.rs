@@ -388,14 +388,18 @@ impl super::DsignAlgorithm for Ed25519 {
     }
 
     fn gen_key(seed: &[u8]) -> Self::SigningKey {
-        assert_eq!(seed.len(), SEED_SIZE, "Ed25519 seed must be exactly 32 bytes");
+        assert_eq!(
+            seed.len(),
+            SEED_SIZE,
+            "Ed25519 seed must be exactly 32 bytes"
+        );
         Ed25519SigningKey::from_seed_bytes(seed)
     }
 }
 
 // New trait implementation for compatibility with KES
-use crate::common::traits::DsignAlgorithm as CommonDsignAlgorithm;
 use crate::common::error::{CryptoError as CommonCryptoError, Result};
+use crate::common::traits::DsignAlgorithm as CommonDsignAlgorithm;
 
 impl CommonDsignAlgorithm for Ed25519 {
     type SigningKey = Ed25519SigningKey;
@@ -449,8 +453,7 @@ impl CommonDsignAlgorithm for Ed25519 {
     }
 
     fn deserialize_verification_key(bytes: &[u8]) -> Result<Self::VerificationKey> {
-        Ed25519VerificationKey::from_bytes(bytes)
-            .ok_or(CommonCryptoError::InvalidPublicKey)
+        Ed25519VerificationKey::from_bytes(bytes).ok_or(CommonCryptoError::InvalidPublicKey)
     }
 
     fn serialize_signature(signature: &Self::Signature) -> alloc::vec::Vec<u8> {
@@ -466,10 +469,10 @@ impl CommonDsignAlgorithm for Ed25519 {
         Ok(Ed25519Signature(array))
     }
 
-    fn forget_signing_key(_signing_key: Self::SigningKey) {
-        // In Rust, the drop will handle zeroization if we use zeroize crate
-        // For now, the key will be dropped and memory will be freed
-        // TODO: Add proper zeroization using zeroize crate
+    fn forget_signing_key(mut signing_key: Self::SigningKey) {
+        // Securely zeroize the signing key to prevent it from remaining in memory
+        use zeroize::Zeroize;
+        signing_key.0.zeroize();
     }
 }
 
@@ -490,12 +493,17 @@ mod tests {
     fn test_sign_and_verify_roundtrip() {
         let seed = [42u8; 32];
         let signing_key = Ed25519::gen_key(&seed);
-        let verification_key = <Ed25519 as crate::dsign::DsignAlgorithm>::derive_verification_key(&signing_key);
+        let verification_key =
+            <Ed25519 as crate::dsign::DsignAlgorithm>::derive_verification_key(&signing_key);
 
         let message = b"cardano";
         let signature = <Ed25519 as crate::dsign::DsignAlgorithm>::sign(&signing_key, message);
 
-        let result = <Ed25519 as crate::dsign::DsignAlgorithm>::verify(&verification_key, message, &signature);
+        let result = <Ed25519 as crate::dsign::DsignAlgorithm>::verify(
+            &verification_key,
+            message,
+            &signature,
+        );
         assert!(result.is_ok());
     }
 
@@ -503,10 +511,15 @@ mod tests {
     fn test_verify_fails_wrong_message() {
         let seed = [9u8; 32];
         let signing_key = Ed25519::gen_key(&seed);
-        let verification_key = <Ed25519 as crate::dsign::DsignAlgorithm>::derive_verification_key(&signing_key);
+        let verification_key =
+            <Ed25519 as crate::dsign::DsignAlgorithm>::derive_verification_key(&signing_key);
 
         let signature = <Ed25519 as crate::dsign::DsignAlgorithm>::sign(&signing_key, b"hello");
-        let result = <Ed25519 as crate::dsign::DsignAlgorithm>::verify(&verification_key, b"world", &signature);
+        let result = <Ed25519 as crate::dsign::DsignAlgorithm>::verify(
+            &verification_key,
+            b"world",
+            &signature,
+        );
 
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), CryptoError::VerificationFailed);
@@ -519,12 +532,17 @@ mod tests {
 
         let signing_key1 = Ed25519::gen_key(&seed1);
         let signing_key2 = Ed25519::gen_key(&seed2);
-        let verification_key2 = <Ed25519 as crate::dsign::DsignAlgorithm>::derive_verification_key(&signing_key2);
+        let verification_key2 =
+            <Ed25519 as crate::dsign::DsignAlgorithm>::derive_verification_key(&signing_key2);
 
         let message = b"test";
         let signature1 = <Ed25519 as crate::dsign::DsignAlgorithm>::sign(&signing_key1, message);
 
-        let result = <Ed25519 as crate::dsign::DsignAlgorithm>::verify(&verification_key2, message, &signature1);
+        let result = <Ed25519 as crate::dsign::DsignAlgorithm>::verify(
+            &verification_key2,
+            message,
+            &signature1,
+        );
         assert!(result.is_err());
     }
 
@@ -532,10 +550,12 @@ mod tests {
     fn test_empty_message() {
         let seed = [42u8; 32];
         let signing_key = Ed25519::gen_key(&seed);
-        let verification_key = <Ed25519 as crate::dsign::DsignAlgorithm>::derive_verification_key(&signing_key);
+        let verification_key =
+            <Ed25519 as crate::dsign::DsignAlgorithm>::derive_verification_key(&signing_key);
 
         let signature = <Ed25519 as crate::dsign::DsignAlgorithm>::sign(&signing_key, b"");
-        let result = <Ed25519 as crate::dsign::DsignAlgorithm>::verify(&verification_key, b"", &signature);
+        let result =
+            <Ed25519 as crate::dsign::DsignAlgorithm>::verify(&verification_key, b"", &signature);
         assert!(result.is_ok());
     }
 
@@ -543,11 +563,17 @@ mod tests {
     fn test_large_message() {
         let seed = [99u8; 32];
         let signing_key = Ed25519::gen_key(&seed);
-        let verification_key = <Ed25519 as crate::dsign::DsignAlgorithm>::derive_verification_key(&signing_key);
+        let verification_key =
+            <Ed25519 as crate::dsign::DsignAlgorithm>::derive_verification_key(&signing_key);
 
         let large_message = vec![0xAB; 10_000];
-        let signature = <Ed25519 as crate::dsign::DsignAlgorithm>::sign(&signing_key, &large_message);
-        let result = <Ed25519 as crate::dsign::DsignAlgorithm>::verify(&verification_key, &large_message, &signature);
+        let signature =
+            <Ed25519 as crate::dsign::DsignAlgorithm>::sign(&signing_key, &large_message);
+        let result = <Ed25519 as crate::dsign::DsignAlgorithm>::verify(
+            &verification_key,
+            &large_message,
+            &signature,
+        );
         assert!(result.is_ok());
     }
 }

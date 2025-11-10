@@ -14,7 +14,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Generated keypair from seed:");
     println!("  Secret key: {} bytes", secret_key.len());
-    println!("  Public key: {} bytes ({}...)",
+    println!(
+        "  Public key: {} bytes ({}...)",
         public_key.len(),
         hex::encode(&public_key[0..8])
     );
@@ -25,7 +26,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Message: {}", String::from_utf8_lossy(message));
 
     let proof = VrfDraft03::prove(&secret_key, message)?;
-    println!("Proof generated ({} bytes): {}...",
+    println!(
+        "Proof generated ({} bytes): {}...",
         proof.len(),
         hex::encode(&proof[0..16])
     );
@@ -34,7 +36,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Verify the proof and get VRF output
     let output = VrfDraft03::verify(&public_key, &proof, message)?;
     println!("✓ Proof verified successfully!");
-    println!("VRF output ({} bytes): {}...",
+    println!(
+        "VRF output ({} bytes): {}...",
         output.len(),
         hex::encode(&output[0..16])
     );
@@ -79,7 +82,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 // Helper function to encode bytes as hex
 mod hex {
     pub fn encode(bytes: &[u8]) -> String {
-        bytes.iter()
+        bytes
+            .iter()
             .map(|b| format!("{:02x}", b))
             .collect::<String>()
     }

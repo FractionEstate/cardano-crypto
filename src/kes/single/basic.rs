@@ -38,9 +38,7 @@ where
         1
     }
 
-    fn derive_verification_key(
-        signing_key: &Self::SigningKey,
-    ) -> Result<Self::VerificationKey> {
+    fn derive_verification_key(signing_key: &Self::SigningKey) -> Result<Self::VerificationKey> {
         D::derive_verification_key(signing_key)
     }
 

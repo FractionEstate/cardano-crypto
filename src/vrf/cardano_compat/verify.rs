@@ -3,7 +3,9 @@
 //! This module implements VRF proof verification matching Cardano's libsodium
 //! implementation byte-for-byte.
 
-use curve25519_dalek::{constants::ED25519_BASEPOINT_POINT, edwards::CompressedEdwardsY, scalar::Scalar};
+use curve25519_dalek::{
+    constants::ED25519_BASEPOINT_POINT, edwards::CompressedEdwardsY, scalar::Scalar,
+};
 use sha2::{Digest, Sha512};
 
 use super::point::{cardano_clear_cofactor, cardano_hash_to_curve};
@@ -127,10 +129,10 @@ pub fn cardano_vrf_verify(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::common::point_to_bytes;
     use crate::vrf::cardano_compat::prove::cardano_vrf_prove;
     use curve25519_dalek::{constants::ED25519_BASEPOINT_POINT, scalar::Scalar};
     use sha2::{Digest, Sha512};
-    use crate::common::point_to_bytes;
 
     #[test]
     fn test_verify_roundtrip() {
@@ -162,12 +164,7 @@ mod tests {
         let message = b"test";
 
         let proof = cardano_vrf_prove(&sk, message).expect("prove failed");
-        let output = cardano_vrf_verify(
-            &public_key,
-            &proof,
-            message,
-        )
-        .expect("verify failed");
+        let output = cardano_vrf_verify(&public_key, &proof, message).expect("verify failed");
 
         assert_eq!(output.len(), 64);
     }
@@ -194,11 +191,7 @@ mod tests {
         let proof = cardano_vrf_prove(&sk, message).expect("prove failed");
 
         // Try to verify with wrong message
-        let result = cardano_vrf_verify(
-            pk.try_into().unwrap(),
-            &proof,
-            b"wrong",
-        );
+        let result = cardano_vrf_verify(pk.try_into().unwrap(), &proof, b"wrong");
 
         assert!(result.is_err());
     }

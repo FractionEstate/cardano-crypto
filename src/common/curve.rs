@@ -209,9 +209,9 @@ pub fn scalar_to_bytes(scalar: &Scalar) -> [u8; 32] {
 /// Clamped 32-byte scalar suitable for Ed25519 operations
 #[must_use]
 pub fn clamp_scalar(mut bytes: [u8; 32]) -> [u8; 32] {
-    bytes[0] &= 248;   // Clear 3 low bits
-    bytes[31] &= 127;  // Clear high bit
-    bytes[31] |= 64;   // Set second-high bit
+    bytes[0] &= 248; // Clear 3 low bits
+    bytes[31] &= 127; // Clear high bit
+    bytes[31] |= 64; // Set second-high bit
     bytes
 }
 

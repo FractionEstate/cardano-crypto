@@ -18,9 +18,9 @@ pub mod curve;
 #[cfg(feature = "vrf")]
 pub mod hash;
 
-pub mod traits;
 /// Security-related utilities and constant-time operations
 pub mod security;
+pub mod traits;
 
 #[cfg(feature = "vrf")]
 pub mod vrf_constants;
@@ -34,8 +34,8 @@ pub use curve::{bytes_to_point, bytes_to_scalar, clamp_scalar, point_to_bytes, s
 #[cfg(feature = "vrf")]
 pub use hash::hash_sha512;
 
-pub use traits::{ConstantTimeEq, SignableRepresentation};
 pub use security::zeroize;
+pub use traits::{ConstantTimeEq, SignableRepresentation};
 
 #[cfg(feature = "vrf")]
 pub use vrf_constants::{ONE, SUITE_DRAFT03, SUITE_DRAFT13, THREE, TWO};

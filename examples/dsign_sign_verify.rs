@@ -10,7 +10,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Display algorithm parameters
     println!("Ed25519 Parameters:");
     println!("  Signing key: {} bytes", Ed25519::SIGNING_KEY_SIZE);
-    println!("  Verification key: {} bytes", Ed25519::VERIFICATION_KEY_SIZE);
+    println!(
+        "  Verification key: {} bytes",
+        Ed25519::VERIFICATION_KEY_SIZE
+    );
     println!("  Signature size: {} bytes", Ed25519::SIGNATURE_SIZE);
     println!();
 
@@ -20,7 +23,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let verification_key = Ed25519::derive_verification_key(&signing_key);
 
     println!("Generated keypair from seed:");
-    println!("  Verification key: {} bytes ({}...)",
+    println!(
+        "  Verification key: {} bytes ({}...)",
         verification_key.as_bytes().len(),
         hex::encode(&verification_key.as_bytes()[0..8])
     );
@@ -31,7 +35,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Message: {}", String::from_utf8_lossy(message));
 
     let signature = Ed25519::sign(&signing_key, message);
-    println!("Signature generated ({} bytes): {}...",
+    println!(
+        "Signature generated ({} bytes): {}...",
         signature.as_bytes().len(),
         hex::encode(&signature.as_bytes()[0..16])
     );
@@ -74,7 +79,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 // Helper function to encode bytes as hex
 mod hex {
     pub fn encode(bytes: &[u8]) -> String {
-        bytes.iter()
+        bytes
+            .iter()
             .map(|b| format!("{:02x}", b))
             .collect::<String>()
     }

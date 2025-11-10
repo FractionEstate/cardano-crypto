@@ -311,7 +311,8 @@ mod tests {
         // Even if we provide a different verification key, the signature
         // verification should use the embedded one
         let different_seed = vec![99u8; CompactSingleEd25519::SEED_SIZE];
-        let different_sk = CompactSingleEd25519::gen_key_kes_from_seed_bytes(&different_seed).unwrap();
+        let different_sk =
+            CompactSingleEd25519::gen_key_kes_from_seed_bytes(&different_seed).unwrap();
         let different_vk = CompactSingleEd25519::derive_verification_key(&different_sk).unwrap();
 
         // Verification with different VK parameter should still work

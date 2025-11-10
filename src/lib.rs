@@ -122,9 +122,9 @@ pub use vrf::VrfDraft03;
 
 #[cfg(feature = "kes")]
 pub use kes::{
-    CompactSum0Kes, CompactSum1Kes, CompactSum2Kes, CompactSum3Kes, CompactSum4Kes,
-    CompactSum5Kes, CompactSum6Kes, CompactSum7Kes, KesAlgorithm, SingleKes, Sum0Kes, Sum1Kes,
-    Sum2Kes, Sum3Kes, Sum4Kes, Sum5Kes, Sum6Kes, Sum7Kes,
+    CompactSum0Kes, CompactSum1Kes, CompactSum2Kes, CompactSum3Kes, CompactSum4Kes, CompactSum5Kes,
+    CompactSum6Kes, CompactSum7Kes, KesAlgorithm, SingleKes, Sum0Kes, Sum1Kes, Sum2Kes, Sum3Kes,
+    Sum4Kes, Sum5Kes, Sum6Kes, Sum7Kes,
 };
 
 #[cfg(feature = "cbor")]

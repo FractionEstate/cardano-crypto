@@ -11,9 +11,7 @@
 
 use cardano_crypto::common::error::Result;
 use cardano_crypto::dsign::Ed25519;
-use cardano_crypto::kes::{
-    CompactSum6Kes, KesAlgorithm, SingleKes, Sum2Kes, Sum6Kes,
-};
+use cardano_crypto::kes::{CompactSum6Kes, KesAlgorithm, SingleKes, Sum2Kes, Sum6Kes};
 
 /// Helper to print separator lines
 fn separator() {
@@ -152,9 +150,7 @@ fn demo_sum6_kes() -> Result<()> {
     println!("Seed size: {} bytes", MyKes::SEED_SIZE);
     println!("Verification key: {} bytes", MyKes::VERIFICATION_KEY_SIZE);
     println!("Signature: {} bytes", MyKes::SIGNATURE_SIZE);
-    println!(
-        "Note: Sum6Kes is the standard KES scheme used in Cardano stake pools"
-    );
+    println!("Note: Sum6Kes is the standard KES scheme used in Cardano stake pools");
 
     // Generate keypair
     let seed = [6u8; 32];
@@ -272,7 +268,8 @@ fn main() -> Result<()> {
     separator();
     println!("\n  KEY TAKEAWAYS");
     separator();
-    println!("
+    println!(
+        "
 • SingleKES: 1 period, no forward security (base case)
 • Sum2Kes: 4 periods (2²), demonstrates binary tree composition
 • Sum6Kes: 64 periods (2⁶), Cardano standard for stake pools
@@ -286,7 +283,8 @@ Forward Security Guarantee:
 Cardano Usage:
   Stake pools use Sum6Kes with 64 periods, where each period ≈ 36 hours.
   This allows 90 days of operation before requiring key rotation.
-    ");
+    "
+    );
 
     separator();
     println!("  ALL KES LIFECYCLE TESTS PASSED!");

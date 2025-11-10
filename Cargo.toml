@@ -89,3 +89,47 @@ required-features = ["kes"]
 [[example]]
 name = "dsign_sign_verify"
 required-features = ["dsign"]
+
+# ============================================================================
+# Build Optimization Profiles
+# ============================================================================
+
+[profile.dev]
+# Development profile - fast compilation, minimal optimization
+opt-level = 0
+debug = true
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = 'unwind'
+incremental = true
+codegen-units = 256
+
+[profile.release]
+# Production release profile - maximum optimization
+opt-level = 3           # Maximum optimization
+debug = false           # No debug info in release
+debug-assertions = false
+overflow-checks = false
+lto = "fat"            # Full Link-Time Optimization for smaller, faster code
+panic = 'abort'        # Abort on panic (smaller binary, no unwinding)
+incremental = false
+codegen-units = 1      # Better optimization, slower compile
+strip = true           # Strip symbols for smaller binary
+
+[profile.release-with-debug]
+# Release with debug info (for profiling)
+inherits = "release"
+debug = true
+strip = false
+
+[profile.bench]
+# Benchmarking profile
+inherits = "release"
+debug = false
+lto = "fat"
+
+[profile.test]
+# Test profile - balance between speed and compilation time
+inherits = "dev"
+opt-level = 1          # Some optimization for faster tests

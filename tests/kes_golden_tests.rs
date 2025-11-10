@@ -6,14 +6,14 @@ use cardano_crypto::kes::{KesAlgorithm, SingleKes, Sum2Kes, Sum6Kes};
 #[test]
 fn test_single_kes_basic() -> Result<()> {
     type TestKes = SingleKes<cardano_crypto::dsign::Ed25519>;
-    
+
     let seed = [0x42u8; 32];
     let sk = TestKes::gen_key_kes_from_seed_bytes(&seed)?;
     let vk = TestKes::derive_verification_key(&sk)?;
 
     let message = b"SingleKES test";
     let sig = TestKes::sign_kes(&(), 0, message, &sk)?;
-    
+
     assert!(TestKes::verify_kes(&(), &vk, 0, message, &sig).is_ok());
     assert!(TestKes::verify_kes(&(), &vk, 1, message, &sig).is_err());
     assert!(TestKes::update_kes(&(), sk, 0)?.is_none());
@@ -62,7 +62,12 @@ fn test_sum6_kes_total_periods() {
 #[test]
 fn test_sum6_kes_cardano_standard() -> Result<()> {
     let seed = [0x4Cu8; 32];
-    for (period, message) in [(0, b"Genesis" as &[u8]), (10, b"Early"), (31, b"Mid"), (63, b"Final")] {
+    for (period, message) in [
+        (0, b"Genesis" as &[u8]),
+        (10, b"Early"),
+        (31, b"Mid"),
+        (63, b"Final"),
+    ] {
         let mut sk = Sum6Kes::gen_key_kes_from_seed_bytes(&seed)?;
         let vk = Sum6Kes::derive_verification_key(&sk)?;
         for t in 0..period {
@@ -84,7 +89,10 @@ fn test_kes_serialization() -> Result<()> {
     let vk_bytes = Sum6Kes::raw_serialize_verification_key_kes(&vk);
     let vk_restored = Sum6Kes::raw_deserialize_verification_key_kes(&vk_bytes)
         .expect("Deserialization should succeed");
-    assert_eq!(vk_bytes, Sum6Kes::raw_serialize_verification_key_kes(&vk_restored));
+    assert_eq!(
+        vk_bytes,
+        Sum6Kes::raw_serialize_verification_key_kes(&vk_restored)
+    );
     Ok(())
 }
 
@@ -94,8 +102,8 @@ fn test_signature_serialization() -> Result<()> {
     let vk = Sum2Kes::derive_verification_key(&sk)?;
     let sig = Sum2Kes::sign_kes(&(), 0, b"test", &sk)?;
     let sig_bytes = Sum2Kes::raw_serialize_signature_kes(&sig);
-    let sig_restored = Sum2Kes::raw_deserialize_signature_kes(&sig_bytes)
-        .expect("Deserialization should succeed");
+    let sig_restored =
+        Sum2Kes::raw_deserialize_signature_kes(&sig_bytes).expect("Deserialization should succeed");
     assert!(Sum2Kes::verify_kes(&(), &vk, 0, b"test", &sig_restored).is_ok());
     Ok(())
 }
@@ -114,12 +122,16 @@ fn test_cross_period_validation_failure() -> Result<()> {
 fn test_deterministic_key_generation() -> Result<()> {
     let sk1 = Sum6Kes::gen_key_kes_from_seed_bytes(&[0xCCu8; 32])?;
     let sk2 = Sum6Kes::gen_key_kes_from_seed_bytes(&[0xCCu8; 32])?;
-    let vk1_bytes = Sum6Kes::raw_serialize_verification_key_kes(&Sum6Kes::derive_verification_key(&sk1)?);
-    let vk2_bytes = Sum6Kes::raw_serialize_verification_key_kes(&Sum6Kes::derive_verification_key(&sk2)?);
+    let vk1_bytes =
+        Sum6Kes::raw_serialize_verification_key_kes(&Sum6Kes::derive_verification_key(&sk1)?);
+    let vk2_bytes =
+        Sum6Kes::raw_serialize_verification_key_kes(&Sum6Kes::derive_verification_key(&sk2)?);
     assert_eq!(vk1_bytes, vk2_bytes);
 
-    let sig1_bytes = Sum6Kes::raw_serialize_signature_kes(&Sum6Kes::sign_kes(&(), 0, b"test", &sk1)?);
-    let sig2_bytes = Sum6Kes::raw_serialize_signature_kes(&Sum6Kes::sign_kes(&(), 0, b"test", &sk2)?);
+    let sig1_bytes =
+        Sum6Kes::raw_serialize_signature_kes(&Sum6Kes::sign_kes(&(), 0, b"test", &sk1)?);
+    let sig2_bytes =
+        Sum6Kes::raw_serialize_signature_kes(&Sum6Kes::sign_kes(&(), 0, b"test", &sk2)?);
     assert_eq!(sig1_bytes, sig2_bytes);
     Ok(())
 }
