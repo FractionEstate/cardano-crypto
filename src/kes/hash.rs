@@ -26,20 +26,20 @@ pub trait KesHashAlgorithm: Clone + Send + Sync + 'static {
     /// Hash arbitrary data and return a fixed-size output
     fn hash(data: &[u8]) -> Vec<u8>;
 
-    /// Example: hash some data with the KES hash algorithm
-    ///
-    /// ```rust
-    /// use cardano_crypto::kes::hash::Blake2b256;
-    /// // Import the trait so associated items and methods are in scope for the doctest
-    /// use cardano_crypto::kes::KesHashAlgorithm;
-    /// let data = b"kes test";
-    /// let h = Blake2b256::hash(data);
-    /// assert_eq!(h.len(), Blake2b256::OUTPUT_SIZE);
-    /// ```
-
     /// Hash two pieces of data concatenated together
     ///
     /// Default implementation concatenates then hashes, but can be overridden for efficiency.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cardano_crypto::kes::hash::Blake2b256;
+    /// use cardano_crypto::kes::KesHashAlgorithm;
+    /// let data1 = b"part1";
+    /// let data2 = b"part2";
+    /// let h = Blake2b256::hash_concat(data1, data2);
+    /// assert_eq!(h.len(), Blake2b256::OUTPUT_SIZE);
+    /// ```
     #[must_use]
     fn hash_concat(data1: &[u8], data2: &[u8]) -> Vec<u8> {
         let mut combined = Vec::with_capacity(data1.len() + data2.len());
